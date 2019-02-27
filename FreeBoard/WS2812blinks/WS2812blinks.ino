@@ -13,9 +13,11 @@
 #define LED_COUNT 12
 
 //reuse dby BT and serial 9600 is supersafe but slow
-#define BAUD_RATE 28800
+//software serial can not work on different:(
+#define BAUD_RATE_SERIAL 38400
 #ifdef WITH_BLUETOOTH
-  #define BAUD_RATE_STRING "U,28800,N"
+  #define BAUD_RATE_BT 9600
+  #define BAUD_RATE_STRING "U,9600,N"
 #endif
 
 //strip
@@ -26,17 +28,17 @@ Adafruit_NeoPixel leds = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_RGB + NEO_KHZ800)
 
 void setup()
 {
-  Serial.begin(BAUD_RATE);  
+  Serial.begin(BAUD_RATE_SERIAL);  
   #ifdef WITH_BLUETOOTH
     bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
     //By some doings, I someties casued to block in the config mode
-    //bluetooth.print("$");  // Print three times individually
-    //bluetooth.print("$");
-    //bluetooth.print("$");  // Enter command mode
-    //delay(100);  // Short delay, wait for the Mate to send back CMD
-    //bluetooth.println(BAUD_RATE_STRING);  // Temporarily Change the baudrate to 9600, no parity
+    bluetooth.print("$");  // Print three times individually
+    bluetooth.print("$");
+    bluetooth.print("$");  // Enter command mode
+    delay(100);  // Short delay, wait for the Mate to send back CMD
+    bluetooth.println(BAUD_RATE_STRING);  // Temporarily Change the baudrate to 9600, no parity
     // 115200 can be too fast at times for NewSoftSerial to relay the data reliably
-    //bluetooth.begin(BAUD_RATE);  // start again
+     bluetooth.begin(BAUD_RATE_BT);  // start again
   #endif
   leds.begin();  // Call this to start up the LED strip.
   clearLEDs();   // This function, defined below, turns all LEDs off...
@@ -58,16 +60,15 @@ void loop()
 {
    while (true) 
     {
-      delay(1000);
       //send eg mesage header in 4bytes?
-        if (Serial.available() > 0) {
-        setKNownNUmberOfLedsSerial();
-      }
       #ifdef WITH_BLUETOOTH
         if(bluetooth.available()) {
           setKNownNUmberOfLedsBT();
         }
       #endif
+      if (Serial.available() > 0) {
+        setKNownNUmberOfLedsSerial();
+      }
     }
 //  {
 } 
@@ -112,8 +113,9 @@ void setKNownNUmberOfLedsBT()
     byte d = 0;
     while (d<3) {
     if (bluetooth.available()) {
-       data[d] = bluetooth.read();
-       delay(1);//crucial!
+       data[d] = bluetooth.read(); //reads char! 3 bytes by observing, four by specification
+       //delay(10);//dealy is heavily undesired for BT/softrSerial
+       Serial.println(data[d]);
        d++;
       }
     leds.setPixelColor(i, data[0], data[1], data[2]);
