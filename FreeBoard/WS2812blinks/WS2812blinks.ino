@@ -9,7 +9,7 @@
 #endif
 
 //contol of led
-#define PIN 4
+#define PIN 7
 #define LED_COUNT 12
 
 //reuse dby BT and serial 9600 is supersafe but slow
@@ -50,6 +50,7 @@ void setup()
     leds.show();   
   }
   delay(500);
+   clearAllBuffers();
   clearLEDs();
   leds.show();
 }
@@ -89,6 +90,7 @@ void setKNownNUmberOfLedsSerial()
     if (Serial.available() > 0) {
        data[d] = Serial.read();
        delay(1);//crucial!
+       //Serial.println(data[d]);
        d++;
       }
     leds.setPixelColor(i, data[0], data[1], data[2]);
@@ -114,8 +116,8 @@ void setKNownNUmberOfLedsBT()
     while (d<3) {
     if (bluetooth.available()) {
        data[d] = bluetooth.read(); //reads char! 3 bytes by observing, four by specification
-       //delay(10);//dealy is heavily undesired for BT/softrSerial
-       Serial.println(data[d]);
+       //delay(1); //crucial to NOT delay
+       //Serial.println(data[d]);
        d++;
       }
     leds.setPixelColor(i, data[0], data[1], data[2]);
@@ -141,3 +143,13 @@ void clearLEDs()
   }
 }
 
+void clearAllBuffers() {
+      #ifdef WITH_BLUETOOTH
+        while(bluetooth.available()) {
+          bluetooth.read();  
+        }
+      #endif
+      while (Serial.available() > 0) {
+        Serial.read();
+      }
+}
