@@ -1,4 +1,5 @@
 #define WITH_BLUETOOTH
+//#define WITH_SERIAL
 #include <Adafruit_NeoPixel.h>
 
 #ifdef WITH_BLUETOOTH
@@ -14,7 +15,9 @@
 
 //reuse dby BT and serial 9600 is supersafe but slow
 //software serial can not work on different:(
-#define BAUD_RATE_SERIAL 38400
+#ifdef WITH_SERIAL
+  #define BAUD_RATE_SERIAL 38400
+#endif
 #ifdef WITH_BLUETOOTH
   #define BAUD_RATE_BT 9600
   #define BAUD_RATE_STRING "U,9600,N"
@@ -28,7 +31,9 @@ Adafruit_NeoPixel leds = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_RGB + NEO_KHZ800)
 
 void setup()
 {
-  Serial.begin(BAUD_RATE_SERIAL);  
+  #ifdef WITH_SERIAL
+    Serial.begin(BAUD_RATE_SERIAL);  
+  #endif
   #ifdef WITH_BLUETOOTH
     bluetooth.begin(115200);  // The Bluetooth Mate defaults to 115200bps
     //By some doings, I someties casued to block in the config mode
@@ -50,15 +55,21 @@ void setup()
     leds.show();   
   }
   delay(500);
-   clearAllBuffers();
+  clearAllBuffers();
   clearLEDs();
   leds.show();
 }
 
  
-boolean state = false;
+int clear = 3;
 void loop()
 {
+
+  if (clear>0) {
+  clearAllBuffers();
+  clear--;
+  }
+  
    while (true) 
     {
       //send eg mesage header in 4bytes?
@@ -67,13 +78,16 @@ void loop()
           setKNownNUmberOfLedsBT();
         }
       #endif
+      #ifdef WITH_SERIAL
       if (Serial.available() > 0) {
         setKNownNUmberOfLedsSerial();
       }
+      #endif
     }
 //  {
 } 
 
+#ifdef WITH_SERIAL
 //variant1 read array of known length
 // reads 3 bytes per item
 // reads all items before it yelds
@@ -99,6 +113,7 @@ void setKNownNUmberOfLedsSerial()
   }
   leds.show(); 
 }
+#endif
 
 #ifdef WITH_BLUETOOTH
 //variant1 read array of known length
@@ -117,7 +132,7 @@ void setKNownNUmberOfLedsBT()
     if (bluetooth.available()) {
        data[d] = bluetooth.read(); //reads char! 3 bytes by observing, four by specification
        //delay(1); //crucial to NOT delay
-       //Serial.println(data[d]);
+       Serial.println(data[d]);
        d++;
       }
     leds.setPixelColor(i, data[0], data[1], data[2]);
@@ -149,7 +164,9 @@ void clearAllBuffers() {
           bluetooth.read();  
         }
       #endif
-      while (Serial.available() > 0) {
-        Serial.read();
-      }
+      #ifdef WITH_SERIAL
+        while (Serial.available() > 0) {
+          Serial.read();
+        }
+      #endif
 }
