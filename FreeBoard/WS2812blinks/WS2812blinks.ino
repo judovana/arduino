@@ -56,19 +56,18 @@ void setup()
   }
   delay(500);
   clearAllBuffers();
-  clearLEDs();
-  leds.show();
 }
 
  
-int clear = 3;
 void loop()
 {
 
-  if (clear>0) {
-  clearAllBuffers();
-  clear--;
+  long time = millis(); //for 3s jsut eat all buffers
+  while (millis()-time<3000) {
+    clearAllBuffers();
   }
+  clearLEDs();
+  leds.show();
   
    while (true) 
     {
