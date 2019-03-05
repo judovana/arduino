@@ -11,7 +11,7 @@
 
 //contol of led
 #define PIN 7
-#define LED_COUNT 12
+#define LED_COUNT 20
 
 //reuse dby BT and serial 9600 is supersafe but slow
 //software serial can not work on different:(
