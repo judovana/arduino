@@ -1,5 +1,5 @@
-#define WITH_BLUETOOTH
-//#define WITH_SERIAL
+//#define WITH_BLUETOOTH
+#define WITH_SERIAL
 #include <Adafruit_NeoPixel.h>
 
 #ifdef WITH_BLUETOOTH
@@ -11,7 +11,7 @@
 
 //contol of led
 #define PIN 7
-#define LED_COUNT 20
+#define LED_COUNT 2
 
 //reuse dby BT and serial 9600 is supersafe but slow
 //software serial can not work on different:(
@@ -25,7 +25,7 @@
 
 //strip
 //Adafruit_NeoPixel leds = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ800);
-//single led?
+//single leds or moonboard chain
 Adafruit_NeoPixel leds = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_RGB + NEO_KHZ800);
 //itherwise the order of rgb is puzzled
 
