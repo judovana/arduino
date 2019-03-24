@@ -1,6 +1,15 @@
 //#define WITH_BLUETOOTH
 #define WITH_SERIAL
+#define WITH_HEADER
+
 #include <Adafruit_NeoPixel.h>
+
+#ifdef WITH_HEADER
+  #define header_length 8
+#endif
+
+int READ_ALL_KNOWN_BYTES_ID = 0;
+
 
 #ifdef WITH_BLUETOOTH
   #include <SoftwareSerial.h>  
@@ -11,7 +20,7 @@
 
 //contol of led
 #define PIN 7
-#define LED_COUNT 2
+#define LED_COUNT 20
 
 //reuse dby BT and serial 9600 is supersafe but slow
 //software serial can not work on different:(
@@ -71,22 +80,75 @@ void loop()
   
    while (true) 
     {
-      //send eg mesage header in 4bytes?
       #ifdef WITH_BLUETOOTH
         if(bluetooth.available()) {
-          setKNownNUmberOfLedsBT();
+          #ifdef WITH_HEADER
+            int header = decideHeaderBt();
+          #else
+            int header = READ_ALL_KNOWN_BYTES_ID;
+          #endif
+          if (header == READ_ALL_KNOWN_BYTES_ID) {
+            setKNownNUmberOfLedsBT();
+          }
         }
       #endif
       #ifdef WITH_SERIAL
       if (Serial.available() > 0) {
-        setKNownNUmberOfLedsSerial();
+        #ifdef WITH_HEADER
+          int header = decideHeaderSerial();
+        #else
+          int header = READ_ALL_KNOWN_BYTES_ID;
+        #endif
+          if (header == READ_ALL_KNOWN_BYTES_ID) {
+            setKNownNUmberOfLedsSerial();
+          }
       }
       #endif
     }
-//  {
-} 
+}
+
+ 
+
+#ifdef WITH_HEADER
+void put(byte b, byte (*header)[header_length]){
+ for( int idx = 0 ; idx < sizeof( *header )-1 ; ++idx ){
+    (*header)[ idx ] = (*header)[ idx+1 ];
+  }
+  (*header)[header_length-1] = b;
+}
+
+int check(byte header[header_length]){
+  if (
+    header[0] == 250 &&
+    header[1] == 50 &&
+    header[2] == 150 &&
+    header[3] == 200 &&
+    header[4] == 5 &&
+    header[5] == 139 &&
+    header[6] == 144 &&
+    header[7] == 250
+    ) {
+      return READ_ALL_KNOWN_BYTES_ID;
+     }
+   return -1;
+}
+#endif
 
 #ifdef WITH_SERIAL
+#ifdef WITH_HEADER
+int decideHeaderSerial(){
+  byte header[] = {1,2,3,4,5,6,7,8};
+  while(true) {
+    delay(1);//crucial!
+    if (Serial.available() > 0) {
+       put(Serial.read(), &header);
+       if (check(header) >= 0) {
+         return 0;
+       }
+    }
+  }
+}
+#endif
 //variant1 read array of known length
 // reads 3 bytes per item
 // reads all items before it yelds
@@ -129,7 +191,7 @@ void setKNownNUmberOfLedsBT()
     byte d = 0;
     while (d<3) {
     if (bluetooth.available()) {
-       data[d] = bluetooth.read(); //reads char! 3 bytes by observing, four by specification
+       data[d] = bluetooth.read(); //reads char! 3 bytes by observing, four by specification??
        //delay(1); //crucial to NOT delay
        Serial.println(data[d]);
        d++;
