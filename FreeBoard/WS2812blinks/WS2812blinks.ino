@@ -1,4 +1,4 @@
-//#define WITH_BLUETOOTH
+#define WITH_BLUETOOTH
 #define WITH_SERIAL
 #define WITH_HEADER
 
@@ -177,6 +177,20 @@ void setKNownNUmberOfLedsSerial()
 #endif
 
 #ifdef WITH_BLUETOOTH
+#ifdef WITH_HEADER
+int decideHeaderBt(){
+  byte header[] = {1,2,3,4,5,6,7,8};
+  while(true) {
+    //delay(1);//crucial NOT to
+    if (bluetooth.available()) {
+       put(bluetooth.read(), &header);
+       if (check(header) >= 0) {
+         return 0;
+       }
+    }
+  }
+}
+#endif
 //variant1 read array of known length
 // reads 3 bytes per item
 // reads all items before it yelds
