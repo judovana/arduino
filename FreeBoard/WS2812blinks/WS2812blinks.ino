@@ -9,6 +9,7 @@
 #endif
 
 int READ_ALL_KNOWN_BYTES_ID = 0;
+int SW_RESET = 1;
 
 
 #ifdef WITH_BLUETOOTH
@@ -37,6 +38,23 @@ int READ_ALL_KNOWN_BYTES_ID = 0;
 //single leds or moonboard chain
 Adafruit_NeoPixel leds = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_RGB + NEO_KHZ800);
 //itherwise the order of rgb is puzzled
+
+void(* resetFunc) (void) = 0; //declare reset function @ address 0
+
+void reset(){
+  for (int i=0; i<LED_COUNT; i++)  {
+    leds.setPixelColor(i, random(5,245), random(5,245), random(5,245));
+  }
+  leds.show();   
+  delay(1000);
+  clearAllBuffers();
+  for (int i=0; i<LED_COUNT; i++)  {
+    leds.setPixelColor(i, random(5,245), random(5,245), random(5,245));
+  }
+  leds.show();   
+  delay(1000);
+  resetFunc();
+}
 
 void setup()
 {
@@ -89,6 +107,8 @@ void loop()
           #endif
           if (header == READ_ALL_KNOWN_BYTES_ID) {
             setKNownNUmberOfLedsBT();
+          } else if (header == SW_RESET) {
+            reset();
           }
         }
       #endif
@@ -101,6 +121,8 @@ void loop()
         #endif
           if (header == READ_ALL_KNOWN_BYTES_ID) {
             setKNownNUmberOfLedsSerial();
+          } else if (header == SW_RESET) {
+            reset();
           }
       }
       #endif
@@ -130,6 +152,18 @@ int check(byte header[header_length]){
     ) {
       return READ_ALL_KNOWN_BYTES_ID;
      }
+  if (
+    header[0] == 255 &&
+    header[1] == 255 &&
+    header[2] == 255 &&
+    header[3] == 255 &&
+    header[4] == 255 &&
+    header[5] == 255 &&
+    header[6] == 255 &&
+    header[7] == 255
+    ) {
+      return SW_RESET;//because BT sucks
+     }
    return -1;
 }
 #endif
@@ -142,8 +176,9 @@ int decideHeaderSerial(){
     delay(1);//crucial!
     if (Serial.available() > 0) {
        put(Serial.read(), &header);
-       if (check(header) >= 0) {
-         return 0;
+       int checkr = check(header);
+       if (checkr >= 0) {
+         return checkr;
        }
     }
   }
@@ -184,8 +219,9 @@ int decideHeaderBt(){
     //delay(1);//crucial NOT to
     if (bluetooth.available()) {
        put(bluetooth.read(), &header);
-       if (check(header) >= 0) {
-         return 0;
+       int checkr = check(header);
+       if (checkr >= 0) {
+         return checkr;
        }
     }
   }
@@ -207,7 +243,7 @@ void setKNownNUmberOfLedsBT()
     if (bluetooth.available()) {
        data[d] = bluetooth.read(); //reads char! 3 bytes by observing, four by specification??
        //delay(1); //crucial to NOT delay
-       Serial.println(data[d]);
+       //Serial.println(data[d]);
        d++;
       }
     leds.setPixelColor(i, data[0], data[1], data[2]);
