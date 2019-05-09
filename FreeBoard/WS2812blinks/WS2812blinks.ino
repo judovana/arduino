@@ -1,4 +1,4 @@
-#define WITH_BLUETOOTH
+//#define WITH_BLUETOOTH
 #define WITH_SERIAL
 #define WITH_HEADER
 
@@ -21,7 +21,7 @@ int SW_RESET = 1;
 
 //contol of led
 #define PIN 7
-#define LED_COUNT 20
+#define LED_COUNT 400                                                                                                                                             
 
 //reuse dby BT and serial 9600 is supersafe but slow
 //software serial can not work on different:(
@@ -78,7 +78,7 @@ void setup()
   for (int i=0; i<LED_COUNT; i++)
   {
     leds.setPixelColor(i, 5,5,5);
-    delay(100);
+    delay(10);
     leds.show();   
   }
   delay(500);
