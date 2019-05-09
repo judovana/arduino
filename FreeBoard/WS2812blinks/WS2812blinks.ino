@@ -78,7 +78,7 @@ void setup()
   for (int i=0; i<LED_COUNT; i++)
   {
     leds.setPixelColor(i, 5,5,5);
-    delay(10);
+    delay(2000/LED_COUNT);
     leds.show();   
   }
   delay(500);
