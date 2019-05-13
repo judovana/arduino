@@ -1,4 +1,4 @@
-//#define WITH_BLUETOOTH
+#define WITH_BLUETOOTH
 #define WITH_SERIAL
 #define WITH_HEADER
 
@@ -108,6 +108,8 @@ void loop()
           #endif
           if (header == READ_ALL_KNOWN_BYTES_ID) {
             setKNownNUmberOfLedsBT();
+          } else if (header == READ_COLORS_WTH_COORD_ID) {
+            readCoordAndColorUntilTrailingArrivesBT();
           } else if (header == SW_RESET) {
             reset();
           }
@@ -200,6 +202,7 @@ int decideHeaderSerial(){
     }
   }
 }
+#endif
 //variant2 read untill 5 zeroes trailing 
 // set all dark
 // reads 5 bytes per item
@@ -234,7 +237,6 @@ void readCoordAndColorUntilTrailingArrivesSerial()
   }
   leds.show(); 
 }
-#endif
 //variant1 read array of known length
 // reads 3 bytes per item
 // reads all items before it yelds
@@ -278,6 +280,40 @@ int decideHeaderBt(){
   }
 }
 #endif
+//variant2 read untill 5 zeroes trailing 
+// set all dark
+// reads 5 bytes per item
+// coord1 coord2 r g b
+//set coord1*255+coord2 to r g b
+void readCoordAndColorUntilTrailingArrivesBT()
+{
+    //buffering? meassure on big!
+  clearLEDs();
+  boolean done=false;
+  while (true)
+  {
+    byte data[] = {0,0,0,0,0};
+    byte d = 0;
+    while (d<5 || done) {
+    if (bluetooth.available()) {
+       data[d] = bluetooth.read();
+       //delay(1); //crucial to NOT delay
+       //Serial.println(data[d]);
+       d++;
+      }
+      if (d>=4 && data[0] == data[1] && data[0] == data[2] && data[0] == data[3] && data[0] == data[4] && data[0] == 0){
+        done=true;
+        break;
+      }
+    }
+    if (!done){
+      leds.setPixelColor(data[0]*255+data[1], data[2], data[3], data[4]);
+    } else {
+      break;
+    }
+  }
+  leds.show(); 
+}
 //variant1 read array of known length
 // reads 3 bytes per item
 // reads all items before it yelds
