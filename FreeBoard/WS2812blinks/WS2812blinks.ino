@@ -8,8 +8,9 @@
   #define header_length 8
 #endif
 
-int READ_ALL_KNOWN_BYTES_ID = 0;
-int SW_RESET = 1;
+int READ_ALL_KNOWN_BYTES_ID = 1;
+int READ_COLORS_WTH_COORD_ID = 2;
+int SW_RESET = 0;
 
 
 #ifdef WITH_BLUETOOTH
@@ -121,6 +122,8 @@ void loop()
         #endif
           if (header == READ_ALL_KNOWN_BYTES_ID) {
             setKNownNUmberOfLedsSerial();
+          } else if (header == READ_COLORS_WTH_COORD_ID) {
+            readCoordAndColorUntilTrailingArrivesSerial();
           } else if (header == SW_RESET) {
             reset();
           }
@@ -140,6 +143,18 @@ void put(byte b, byte (*header)[header_length]){
 }
 
 int check(byte header[header_length]){
+  if (
+    header[0] == 255 &&
+    header[1] == 0 &&
+    header[2] == 255 &&
+    header[3] == 255 &&
+    header[4] == 255 &&
+    header[5] == 0 &&
+    header[6] == 112 &&
+    header[7] == 124
+    ) {
+      return READ_COLORS_WTH_COORD_ID;
+     }
   if (
     header[0] == 250 &&
     header[1] == 50 &&
@@ -175,13 +190,49 @@ int decideHeaderSerial(){
   while(true) {
     delay(1);//crucial!
     if (Serial.available() > 0) {
-       put(Serial.read(), &header);
+       byte readed= Serial.read();
+       //Serial.println(readed);
+       put(readed, &header);
        int checkr = check(header);
        if (checkr >= 0) {
          return checkr;
        }
     }
   }
+}
+//variant2 read untill 5 zeroes trailing 
+// set all dark
+// reads 5 bytes per item
+// coord1 coord2 r g b
+//set coord1*255+coord2 to r g b
+void readCoordAndColorUntilTrailingArrivesSerial()
+{
+    //buffering? meassure on big!
+  clearLEDs();
+  boolean done=false;
+  while (true)
+  {
+    byte data[] = {0,0,0,0,0};
+    byte d = 0;
+    while (d<5 || done) {
+    if (Serial.available() > 0) {
+       data[d] = Serial.read();
+       delay(1);//crucial!
+       //Serial.println(data[d]);
+       d++;
+      }
+      if (d>=4 && data[0] == data[1] && data[0] == data[2] && data[0] == data[3] && data[0] == data[4] && data[0] == 0){
+        done=true;
+        break;
+      }
+    }
+    if (!done){
+      leds.setPixelColor(data[0]*255+data[1], data[2], data[3], data[4]);
+    } else {
+      break;
+    }
+  }
+  leds.show(); 
 }
 #endif
 //variant1 read array of known length
