@@ -44,13 +44,13 @@ void(* resetFunc) (void) = 0; //declare reset function @ address 0
 
 void reset(){
   for (int i=0; i<LED_COUNT; i++)  {
-    leds.setPixelColor(i, random(5,245), random(5,245), random(5,245));
+    leds.setPixelColor(i, random(5,50), random(5,50), random(5,50));
   }
   leds.show();   
   delay(1000);
   clearAllBuffers();
   for (int i=0; i<LED_COUNT; i++)  {
-    leds.setPixelColor(i, random(5,245), random(5,245), random(5,245));
+    leds.setPixelColor(i, random(5,50), random(5,50), random(5,50));
   }
   leds.show();   
   delay(1000);
