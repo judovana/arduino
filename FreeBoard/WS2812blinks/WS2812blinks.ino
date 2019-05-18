@@ -1,4 +1,4 @@
-#define WITH_BLUETOOTH
+//#define WITH_BLUETOOTH
 #define WITH_SERIAL
 #define WITH_HEADER
 
@@ -224,7 +224,7 @@ void readCoordAndColorUntilTrailingArrivesSerial()
        //Serial.println(data[d]);
        d++;
       }
-      if (d>=4 && data[0] == data[1] && data[0] == data[2] && data[0] == data[3] && data[0] == data[4] && data[0] == 0){
+      if (d>=4 && data[0] == 255 && data[1] == 254 && data[2] == 0 && data[3] == 255 && data[4] == 0){
         done=true;
         break;
       }
@@ -301,7 +301,7 @@ void readCoordAndColorUntilTrailingArrivesBT()
        //Serial.println(data[d]);
        d++;
       }
-      if (d>=4 && data[0] == data[1] && data[0] == data[2] && data[0] == data[3] && data[0] == data[4] && data[0] == 0){
+     if (d>=4 && data[0] == 255 && data[1] == 254 && data[2] == 0 && data[3] == 255 && data[4] == 0){
         done=true;
         break;
       }
