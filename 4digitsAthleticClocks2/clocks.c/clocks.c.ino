@@ -2,7 +2,7 @@
 
 #define PIN_NUMBERS     5
 #define PIN_DELIMITER     7
-#define LED_COUNT_PER_SRIP 59
+#define LED_COUNT_PER_SRIP 60
 #define LED_COUNT LED_COUNT_PER_SRIP*4
 #define LED_COUNT_DEL 9
 int brightness = 10;
@@ -34,6 +34,33 @@ void setup() {
     int r = 0;
     int g = 0;
     int b = 0;
+    if (md1 < 3) {
+      g = brightness;
+    } else if (md1 > 6) {
+      r = brightness;
+    } else {
+      b = brightness;
+    }
+    showNumber(md1, 0, r, g, b);
+    r = g = b = 0;
+    if (md2 < 3) {
+      g = brightness;
+    } else if (md2 > 6) {
+      r = brightness;
+    } else {
+      b = brightness;
+    }
+    showNumber(md2, 1, r, g, b);
+    r = g = b = 0;
+    if (sd1 < 3) {
+      g = brightness;
+    } else if (sd1 > 6) {
+      r = brightness;
+    } else {
+      b = brightness;
+    }
+    showNumber(sd1, 2, r, g, b);
+    r = g = b = 0;
     if (sd2 < 3) {
       g = brightness;
     } else if (sd2 > 6) {
@@ -41,7 +68,7 @@ void setup() {
     } else {
       b = brightness;
     }
-    showNumber(sd2, 0, r, g, b);
+    showNumber(sd2, 3, r, g, b);
     strip.show();
     delay(9);//10*99+9 a bit faster is better then a bit slower
     x++;
