@@ -52,9 +52,9 @@ void setup() {
     }
     showNumber(md2, 1, r, g, b);
     r = g = b = 0;
-    if (sd1 < 3) {
+    if (sd1 < 2) { //this one is first letter of seconds in minute
       g = brightness;
-    } else if (sd1 > 6) {
+    } else if (sd1 > 4) {
       r = brightness;
     } else {
       b = brightness;
