@@ -34,9 +34,9 @@ void setup() {
     int r = 0;
     int g = 0;
     int b = 0;
-    if (md1 < 3) {
+    if (md1 < 2) { //in 60 minutes, thsi behaves like  sd1 in 90 minutes, it would be like md1 and sd1
       g = brightness;
-    } else if (md1 > 6) {
+    } else if (md1 > 3) {
       r = brightness;
     } else {
       b = brightness;
@@ -73,7 +73,8 @@ void setup() {
     delay(9);//10*99+9 a bit faster is better then a bit slower
     x++;
     //x %= 120; //test, Reset x after 2minutes
-    x %= 5400; //Reset x after 90minutes
+    //x %= 5400; //Reset x after 90minutes
+    x %= 3600; //Reset x after 90minutes
 
     Serial.println(x); //For debugging
   }
