@@ -5,7 +5,7 @@
 #define LED_COUNT_PER_SRIP 60
 #define LED_COUNT LED_COUNT_PER_SRIP*4
 #define LED_COUNT_DEL 9
-int brightness = 10;
+int brightness = 200;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
