@@ -5,7 +5,7 @@
 #define LED_COUNT_PER_SRIP 60
 #define LED_COUNT LED_COUNT_PER_SRIP*4
 #define LED_COUNT_DEL 9
-int brightness = 200;
+int brightness = 240;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
@@ -34,36 +34,40 @@ void setup() {
     int r = 0;
     int g = 0;
     int b = 0;
-    if (md1 < 2) { //in 60 minutes, thsi behaves like  sd1 in 90 minutes, it would be like md1 and sd1
+    //0 1 2         3             4 5
+    int sixDelimiter = 3;
+    //0 1 2 3 4     5             6 7 8 9
+    int tenDelimiter = 5;
+    if (md1 < sixDelimiter) { //in 60 minutes, thsi behaves like  sd1 in 90 minutes, it would be like md1 and sd1
       g = brightness;
-    } else if (md1 > 3) {
+    } else if (md1 > sixDelimiter) {
       r = brightness;
     } else {
       b = brightness;
     }
     showNumber(md1, 0, r, g, b);
     r = g = b = 0;
-    if (md2 < 3) {
+    if (md2 < tenDelimiter) {
       g = brightness;
-    } else if (md2 > 6) {
+    } else if (md2 > tenDelimiter) {
       r = brightness;
     } else {
       b = brightness;
     }
     showNumber(md2, 1, r, g, b);
     r = g = b = 0;
-    if (sd1 < 2) { //this one is first letter of seconds in minute
+    if (sd1 < sixDelimiter) { //this one is first letter of seconds in minute
       g = brightness;
-    } else if (sd1 > 3) {
+    } else if (sd1 > sixDelimiter) {
       r = brightness;
     } else {
       b = brightness;
     }
     showNumber(sd1, 2, r, g, b);
     r = g = b = 0;
-    if (sd2 < 3) {
+    if (sd2 < tenDelimiter) {
       g = brightness;
-    } else if (sd2 > 6) {
+    } else if (sd2 > tenDelimiter) {
       r = brightness;
     } else {
       b = brightness;
