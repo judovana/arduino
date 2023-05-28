@@ -11,6 +11,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NE
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
 void setup() {
+  Serial.begin(9600);
   del.begin();
   del.show();
   strip.begin();
@@ -30,49 +31,12 @@ void setup() {
     int sd2 = second % 10;
     int md1 = minute / 10;
     int md2 = minute % 10;
+    debugTime(md1, md2, sd1, sd2);
     clearLEDs();
-    int r = 0;
-    int g = 0;
-    int b = 0;
-    //0 1 2         3             4 5
-    int sixDelimiter = 3;
-    //0 1 2 3 4     5             6 7 8 9
-    int tenDelimiter = 5;
-    if (md1 < sixDelimiter) { //in 60 minutes, thsi behaves like  sd1 in 90 minutes, it would be like md1 and sd1
-      g = brightness;
-    } else if (md1 > sixDelimiter) {
-      r = brightness;
-    } else {
-      b = brightness;
-    }
-    showNumber(md1, 0, r, g, b);
-    r = g = b = 0;
-    if (md2 < tenDelimiter) {
-      g = brightness;
-    } else if (md2 > tenDelimiter) {
-      r = brightness;
-    } else {
-      b = brightness;
-    }
-    showNumber(md2, 1, r, g, b);
-    r = g = b = 0;
-    if (sd1 < sixDelimiter) { //this one is first letter of seconds in minute
-      g = brightness;
-    } else if (sd1 > sixDelimiter) {
-      r = brightness;
-    } else {
-      b = brightness;
-    }
-    showNumber(sd1, 2, r, g, b);
-    r = g = b = 0;
-    if (sd2 < tenDelimiter) {
-      g = brightness;
-    } else if (sd2 > tenDelimiter) {
-      r = brightness;
-    } else {
-      b = brightness;
-    }
-    showNumber(sd2, 3, r, g, b);
+    showNumberWithDeadline(md1, 0, 5);
+    showNumberWithDeadline(md2, 0, 9);
+    showNumberWithDeadline(sd1, 0, 5);
+    showNumberWithDeadline(sd2, 0, 9);
     strip.show();
     delay(9);//10*99+9 a bit faster is better then a bit slower
     x++;
@@ -83,8 +47,56 @@ void setup() {
     Serial.println(x); //For debugging
   }
 }
+void showNumberWithDeadline(int value, int display, int max) {
+    int r = 0;
+    int g = 0;
+    int b = 0;
+    if(max <= 0){
+      b = brightness;
+    } else if (max == 1) {
+        if (value == 0) {
+            g = brightness;
+        } else {
+            r = brightness;
+        }
+    } else {
+      int delimiter = (max+1)/2;
+      //0     1  2   (2+1)/2=1
+      //01    2  3   (3+1)/2=2
+      //01    2  34  (4+1)/2=2
+      //012   3  45  (5+1)/2=3
+      //int sixDelimiter = 3;
+      //012   3  56
+      //0123  4  567
+      //0123  4  5678
+      //01234 5  6789
+      //int tenDelimiter = 5;
+      if (value < delimiter) { //in 60 minutes, thsi behaves like  sd1 in 90 minutes, it would be like md1 and sd1
+        g = brightness;
+      } else if (value > delimiter) {
+        r = brightness;
+      } else {
+        b = brightness;
+      }
+    }
+    showNumber(value, 0, r, g, b);
+  
+}
+
+void showNumberRed(int value, int display) {
+  showNumber(value, display, brightness, 0, 0);
+}
+
+void showNumberGreen(int value, int display) {
+  showNumber(value, display, 0,brightness, 0);
+}
+
+void showNumberBlue(int value, int display) {
+  showNumber(value, display, 0, 0,brightness);
+}
 
 void showNumber(int value, int display, int r, int g, int b) {
+  debugNumberShow(value, display, r,g,b);
   int number = abs(value); //Remove negative signs and any decimals
   if (number == 0 || number == 2 || number == 6 || number == 8  ) {
     segmentN(display, 0, r, g, b);
@@ -175,4 +187,27 @@ void clearLEDs()
   for (int i = 0; i < LED_COUNT; i++)  {
     strip.setPixelColor(i, 0);
   }
+}
+
+void debugTime(int md1, int md2, int sd1, int sd2) {
+  Serial.print("time: ");
+  Serial.print(md1);
+  Serial.print(md2);
+  Serial.print(":");
+  Serial.print(sd1);
+  Serial.println(sd2);
+}
+
+void debugNumberShow(int value, int display, int  r, int g, int b) {
+  Serial.print("Showing: ");
+  Serial.print(value);
+  Serial.print(" at ");
+  Serial.print(display);
+  Serial.print(" in ");
+  Serial.print(r);
+  Serial.print(",");
+  Serial.print(g);
+  Serial.print(",");
+  Serial.print(b);
+  Serial.println("");
 }
