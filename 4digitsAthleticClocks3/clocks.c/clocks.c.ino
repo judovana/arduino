@@ -81,9 +81,19 @@ void setup() {
 void setupMode() {
   freqout(493, 50);
   int setupTimeOut = 0;
+  int pageSetupSelect = 0;
   while (1) {
     char key = keypad_1.getKey();
     int a = (int)key;
+    ////pritning, only twice per second, otherwise it will go mad
+    if (setupTimeOut % 5 == 0 && setupState == 1) {  //time seting
+      ParsedTime current = parseTime(setTime);
+      showNumber(current.md1, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+      showNumber(current.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+      showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+      showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
+      strip.show();
+    }
     if (a >= 35) {
       Serial.print("Pressed: ");
       Serial.println(key);
@@ -91,6 +101,31 @@ void setupMode() {
       if (key == '#') {
         setupState = 0;
         break;
+      }
+      //reacting
+      if (setupState == 1) {  //time seting
+        ParsedTime current = parseTime(setTime);
+        if (a >= 48 || a <= 57) { /*0-9*/
+          int pressedNumberToAdjust = a - 48;
+          if (pageSetupSelect == 0) {
+            current.md1 = pressedNumberToAdjust;
+          }
+          if (pageSetupSelect == 1) {
+            current.md2 = pressedNumberToAdjust;
+          }
+          if (pageSetupSelect == 2) {
+            current.sd1 = pressedNumberToAdjust;
+          }
+          if (pageSetupSelect == 3) {
+            current.sd2 = pressedNumberToAdjust;
+          }
+          setTime = calcTime(current);
+          pageSetupSelect++;
+          if (pageSetupSelect > 3) {
+            pageSetupSelect = 0;
+          }
+          runningTime = 0;
+        }
       }
     }
     setupTimeOut++;
