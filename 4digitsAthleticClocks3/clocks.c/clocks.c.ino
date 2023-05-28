@@ -16,8 +16,8 @@ void setup() {
   del.show();
   strip.begin();
   strip.show();
-  int x = 0;
-  //x= 5200; //test
+  int runningTime = 0; //seconds
+  //runningTime= 5200; //test
   while (1)
   {
     for (int i = 0; i < 10; i++) {
@@ -25,8 +25,8 @@ void setup() {
       del.show() ;
       delay(99);
     }
-    int second = x % 60;
-    int minute = x / 60;
+    int second = runningTime % 60;
+    int minute = runningTime / 60;
     int sd1 = second / 10;
     int sd2 = second % 10;
     int md1 = minute / 10;
@@ -39,12 +39,11 @@ void setup() {
     showNumberWithDeadline(sd2, 0, 9);
     strip.show();
     delay(9);//10*99+9 a bit faster is better then a bit slower
-    x++;
-    //x %= 120; //test, Reset x after 2minutes
-    //x %= 5400; //Reset x after 90minutes
-    x %= 3600; //Reset x after 90minutes
-
-    Serial.println(x); //For debugging
+    runningTime++;
+    //runningTime %= 120; //test, Reset x after 2minutes
+    //runningTime %= 5400; //Reset x after 90minutes
+    runningTime %= 3600; //Reset x after 90minutes
+    Serial.println(runningTime); //For debugging
   }
 }
 void showNumberWithDeadline(int value, int display, int max) {
