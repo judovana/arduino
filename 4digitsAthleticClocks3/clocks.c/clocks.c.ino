@@ -1,30 +1,103 @@
-#include <Adafruit_NeoPixel.h>
+#define outpin 13   // audio out to speaker or amp
+//17 for C0 - 7902 for h8
+//261 for c4- 493 for h4
+//https://muted.io/note-frequencies/
+void freqout(int freq, int t)  // freq in hz, t in ms
+{
+  int hperiod;                               //calculate 1/2 period in us
+  long cycles, i;
+  pinMode(outpin, OUTPUT);                   // turn on output pin
+  hperiod = (500000 / freq) - 7;             // subtract 7 us to make up for digitalWrite overhead
+  cycles = ((long)freq * (long)t) / 1000;    // calculate cycles
+  for (i=0; i<= cycles; i++){              // play note for t ms
+    digitalWrite(outpin, HIGH);
+    delayMicroseconds(hperiod);
+    digitalWrite(outpin, LOW);
+    delayMicroseconds(hperiod - 1);     // - 1 to make up for digitaWrite overhead
+  }
+pinMode(outpin, INPUT);                // shut off pin to avoid noise from other operations
+}
 
+#include <Keypad.h>
+const byte rows = 4;
+const byte cols = 4;
+char keys[rows][cols] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}};
+byte rowPins[rows] = {12,11,10,9};
+byte colPins[cols]= {8,4,3,2};
+Keypad keypad_1 = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols );
+
+#include <Adafruit_NeoPixel.h>
 #define PIN_NUMBERS     5
 #define PIN_DELIMITER     7
 #define LED_COUNT_PER_SRIP 60
 #define LED_COUNT LED_COUNT_PER_SRIP*4
 #define LED_COUNT_DEL 9
-int brightness = 240;
-
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
+int brightness = 240;
+int runningTime = 0; //seconds
+ //runningTime= 5200; //test
+int setupState = 0;
+int subSetupState = 0;
+int setupTimeOutMax = 100;
+  
 void setup() {
   Serial.begin(9600);
   del.begin();
   del.show();
   strip.begin();
   strip.show();
-  int runningTime = 0; //seconds
-  //runningTime= 5200; //test
   while (1)
   {
-    for (int i = 0; i < 10; i++) {
-      deldel(i);
-      del.show() ;
-      delay(99);
+    char key = keypad_1.getKey();
+    int a = (int)key;
+    if (a>=35) {
+      Serial.print("Pressed: ");
+      Serial.println(key);
+      if (key == '*') {
+        setupState = 1;
+      }
     }
+    if (setupState == 0) {
+      runtimeMode();
+    } else {
+      setupMode();
+    }
+  }
+}
+
+void setupMode() {
+  freqout(493, 50);
+  int setupTimeOut = 0;
+    while (1)
+  {
+    char key = keypad_1.getKey();
+    int a = (int)key;
+    if (a>=35) {
+      Serial.print("Pressed: ");
+      Serial.println(key);
+      setupTimeOut = 0;
+      if (key == '#') {
+        setupState = 0;
+        break;
+      }
+    }
+    setupTimeOut++;
+    Serial.println(setupTimeOut);
+    if (setupTimeOut > setupTimeOutMax) {
+      setupState = 0;
+      break;
+    }
+    delay(99);
+  }
+}
+
+void runtimeMode() {
     int second = runningTime % 60;
     int minute = runningTime / 60;
     int sd1 = second / 10;
@@ -32,6 +105,19 @@ void setup() {
     int md1 = minute / 10;
     int md2 = minute % 10;
     debugTime(md1, md2, sd1, sd2);
+    timeMode(md1, md2, sd1, sd2);
+    runningTime++;
+    //runningTime %= 120; //test, Reset x after 2minutes
+    //runningTime %= 5400; //Reset x after 90minutes
+    runningTime %= 3600; //Reset x after 90minutes
+    Serial.println(runningTime); //For debugging
+}
+void timeMode(int md1, int md2, int sd1, int sd2){
+  for (int i = 0; i < 10; i++) {
+      deldel(i);
+      del.show() ;
+      delay(99);
+    }
     clearLEDs();
     showNumberWithDeadline(md1, 0, 5);
     showNumberWithDeadline(md2, 0, 9);
@@ -39,13 +125,8 @@ void setup() {
     showNumberWithDeadline(sd2, 0, 9);
     strip.show();
     delay(9);//10*99+9 a bit faster is better then a bit slower
-    runningTime++;
-    //runningTime %= 120; //test, Reset x after 2minutes
-    //runningTime %= 5400; //Reset x after 90minutes
-    runningTime %= 3600; //Reset x after 90minutes
-    Serial.println(runningTime); //For debugging
-  }
 }
+
 void showNumberWithDeadline(int value, int display, int max) {
     int r = 0;
     int g = 0;
