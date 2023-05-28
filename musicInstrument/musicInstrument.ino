@@ -38,6 +38,9 @@ char keys[rows][cols] =
   {'*','0','#','D'}
 };
 
+      //17 for C0 - 7902 for h8
+      //261 for c4- 493 for h4
+      //https://muted.io/note-frequencies/
 int freqs[rows][cols] =                
 {
   {130,260,523,1046},
