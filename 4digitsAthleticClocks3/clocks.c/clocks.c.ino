@@ -4,6 +4,11 @@
 //https://muted.io/note-frequencies/
 void freqout(int freq, int t)  // freq in hz, t in ms
 {
+  Serial.print("playing ");
+  Serial.print(freq);
+  Serial.print(" Hz for ");
+  Serial.print(t);
+  Serial.println(" ms");
   int hperiod;  //calculate 1/2 period in us
   long cycles, i;
   pinMode(outpin, OUTPUT);                 // turn on output pin
