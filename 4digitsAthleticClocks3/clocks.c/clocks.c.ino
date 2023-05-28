@@ -40,11 +40,18 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NE
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
 int brightness = 240;
+int setTime = 3600;
 int runningTime = 0; //seconds
  //runningTime= 5200; //test
 int setupState = 0;
-int subSetupState = 0;
 int setupTimeOutMax = 100;
+
+struct ParsedTime {
+  int md1;
+  int md2; //minute digit 1, minute digit2
+  int sd1; //seconds digit 1, seconds digit 2
+  int sd2; 
+};
   
 void setup() {
   Serial.begin(9600);
@@ -97,32 +104,42 @@ void setupMode() {
   }
 }
 
+struct ParsedTime parseTime(int seconds) {
+  int second = runningTime % 60;
+  int minute = runningTime / 60;
+  int sd1 = second / 10;
+  int sd2 = second % 10;
+  int md1 = minute / 10;
+  int md2 = minute % 10;
+  struct ParsedTime parsed = {md1, md2, sd1, sd2};
+  return parsed;
+}
+
 void runtimeMode() {
-    int second = runningTime % 60;
-    int minute = runningTime / 60;
-    int sd1 = second / 10;
-    int sd2 = second % 10;
-    int md1 = minute / 10;
-    int md2 = minute % 10;
-    debugTime(md1, md2, sd1, sd2);
-    timeMode(md1, md2, sd1, sd2);
+    ParsedTime parsed = parseTime(runningTime);
+    debugTime(parsed);
+    timeMode(parsed);
     runningTime++;
     //runningTime %= 120; //test, Reset x after 2minutes
     //runningTime %= 5400; //Reset x after 90minutes
-    runningTime %= 3600; //Reset x after 90minutes
+    runningTime %= setTime; //Reset x after 90minutes
+    if (runningTime == 0) { /*FIXME this is not viable, is causing dealy in counter*/
+      freqout(4000, 100);   /*It is here for hackish non zero only*/
+    }
     Serial.println(runningTime); //For debugging
 }
-void timeMode(int md1, int md2, int sd1, int sd2){
+
+void timeMode(ParsedTime parsed){
   for (int i = 0; i < 10; i++) {
       deldel(i);
       del.show() ;
       delay(99);
     }
     clearLEDs();
-    showNumberWithDeadline(md1, 0, 5);
-    showNumberWithDeadline(md2, 0, 9);
-    showNumberWithDeadline(sd1, 0, 5);
-    showNumberWithDeadline(sd2, 0, 9);
+    showNumberWithDeadline(parsed.md1, 0, 5);
+    showNumberWithDeadline(parsed.md2, 0, 9);
+    showNumberWithDeadline(parsed.sd1, 0, 5);
+    showNumberWithDeadline(parsed.sd2, 0, 9);
     strip.show();
     delay(9);//10*99+9 a bit faster is better then a bit slower
 }
@@ -269,13 +286,13 @@ void clearLEDs()
   }
 }
 
-void debugTime(int md1, int md2, int sd1, int sd2) {
+void debugTime(ParsedTime parsed) {
   Serial.print("time: ");
-  Serial.print(md1);
-  Serial.print(md2);
+  Serial.print(parsed.md1);
+  Serial.print(parsed.md2);
   Serial.print(":");
-  Serial.print(sd1);
-  Serial.println(sd2);
+  Serial.print(parsed.sd1);
+  Serial.println(parsed.sd2);
 }
 
 void debugNumberShow(int value, int display, int  r, int g, int b) {
