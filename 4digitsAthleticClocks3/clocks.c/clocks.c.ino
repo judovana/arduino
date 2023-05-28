@@ -103,9 +103,13 @@ void setupMode() {
   }
 }
 
+int calcTime(struct ParsedTime parsed) {
+  return parsed.md1 * 10 * 60 + parsed.md2 * 60 + parsed.sd1 * 10 + parsed.sd2;
+}
+
 struct ParsedTime parseTime(int seconds) {
-  int second = runningTime % 60;
-  int minute = runningTime / 60;
+  int second = seconds % 60;
+  int minute = seconds / 60;
   int sd1 = second / 10;
   int sd2 = second % 10;
   int md1 = minute / 10;
@@ -125,7 +129,9 @@ void runtimeMode() {
   if (runningTime == 0) {  /*FIXME this is not viable, is causing dealy in counter*/
     freqout(4000, 100);    /*It is here for hackish non zero only*/
   }
-  Serial.println(runningTime);  //For debugging
+  Serial.print(runningTime);
+  Serial.print("/");
+  Serial.println(setTime);
 }
 
 void timeMode(ParsedTime parsed) {
@@ -136,9 +142,9 @@ void timeMode(ParsedTime parsed) {
   }
   clearLEDs();
   showNumberWithDeadline(parsed.md1, 0, 5);
-  showNumberWithDeadline(parsed.md2, 0, 9);
-  showNumberWithDeadline(parsed.sd1, 0, 5);
-  showNumberWithDeadline(parsed.sd2, 0, 9);
+  showNumberWithDeadline(parsed.md2, 1, 9);
+  showNumberWithDeadline(parsed.sd1, 2, 5);
+  showNumberWithDeadline(parsed.sd2, 3, 9);
   strip.show();
   delay(9);  //10*99+9 a bit faster is better then a bit slower
 }
@@ -175,7 +181,7 @@ void showNumberWithDeadline(int value, int display, int max) {
       b = brightness;
     }
   }
-  showNumber(value, 0, r, g, b);
+  showNumber(value, display, r, g, b);
 }
 
 void showNumberRed(int value, int display) {
