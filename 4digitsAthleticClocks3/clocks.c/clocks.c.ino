@@ -45,7 +45,8 @@ Keypad keypad_1 = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
-int brightness = 50;
+int brightness = 27*2;
+int mode = 1;
 int setTime = 3600;
 int runningTime = 0;  //seconds
                       //runningTime= 5200; //test
@@ -91,12 +92,19 @@ void setupMode() {
     char key = keypad_1.getKey();
     int a = (int)key;
     ////pritning, only twice per second, otherwise it will go mad
-    if (setupTimeOut % 5 == 0 && setupState == 1) {  //time seting
-      ParsedTime current = parseTime(setTime);
-      showNumber(current.md1, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
-      showNumber(current.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
-      showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
-      showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
+    if (setupTimeOut % 5 == 0) {
+      clearLEDs();
+      if (setupState == 1) {  //time seting
+        ParsedTime current = parseTime(setTime);
+        showNumber(current.md1, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+        showNumber(current.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+        showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+        showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
+      }
+      if (setupState == 2) {  //time seting
+        showNumber(mode, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+        showNumber(brightness/27, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+      }
       strip.show();
     }
     if (a >= 35) {
@@ -106,6 +114,12 @@ void setupMode() {
       if (key == '#') {
         setupState = 0;
         break;
+      }
+      if (key == '*') {
+        setupState += 1;
+        if (setupState > 2) {
+          setupState = 1;
+        }
       }
       //reacting
       if (setupState == 1) {  //time seting
@@ -129,7 +143,28 @@ void setupMode() {
           if (pageSetupSelect > 3) {
             pageSetupSelect = 0;
           }
-          runningTime = 0;
+          resetMode();
+        }
+      }
+      if (setupState == 2) {  //time seting
+        ParsedTime current = parseTime(setTime);
+        if (a >= 48 || a <= 57) { /*0-9*/
+          int pressedNumberToAdjust = a - 48;
+          if (pageSetupSelect == 0) {
+            if(pressedNumberToAdjust%2 == 1) {
+              mode = 1;
+            } else {
+              mode = -1;
+            }
+            resetMode();
+          }
+          if (pageSetupSelect == 1) {
+            brightness = pressedNumberToAdjust * 27;
+          }
+          pageSetupSelect++;
+          if (pageSetupSelect > 1) {
+            pageSetupSelect = 0;
+          }
         }
       }
     }
@@ -162,10 +197,13 @@ void runtimeMode() {
   ParsedTime parsed = parseTime(runningTime);
   debugTime(parsed);
   timeMode(parsed);
-  runningTime++;
+  runningTime += mode;
   //runningTime %= 120; //test, Reset x after 2minutes
   //runningTime %= 5400; //Reset x after 90minutes
   runningTime %= setTime;  //Reset x after 90minutes
+  if (runningTime<0){
+    runningTime = setTime;
+  }
   if (runningTime == 0) {  /*FIXME this is not viable, is causing dealy in counter*/
     freqout(4000, 100);    /*It is here for hackish non zero only*/
   }
@@ -221,6 +259,12 @@ void showNumberWithDeadline(int value, int display, int max) {
       b = brightness;
     }
   }
+  if (mode<0){
+    //swap in countdown mode
+    int swapRG = g;
+    g = r;
+    r = swapRG;
+  }
   showNumber(value, display, r, g, b);
 }
 
@@ -239,16 +283,19 @@ void showNumberBlue(int value, int display) {
 void showNumber(int value, int display, int r, int g, int b) {
   debugNumberShow(value, display, r, g, b);
   int number = abs(value);  //Remove negative signs and any decimals
+  if (value == -1) {
+    number = -1;
+  }
   if (number == 0 || number == 2 || number == 6 || number == 8) {
     segmentN(display, 0, r, g, b);
   }
   if (number == 0 || number == 2 || number == 3 || number == 5 || number == 6 || number == 8) {
     segmentN(display, 1, r, g, b);
   }
-  if (number == 0 || number == 1 || number == 3 || number == 4 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9) {
+  if (number == 0 || number == 1 || number == 3 || number == 4 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9 || number == -1 ) {
     segmentN(display, 2, r, g, b);
   }
-  if (number == 0 || number == 1 || number == 2 || number == 3 || number == 4 || number == 7 || number == 8 || number == 9) {
+  if (number == 0 || number == 1 || number == 2 || number == 3 || number == 4 || number == 7 || number == 8 || number == 9 || number == -1 ) {
     segmentN(display, 3, r, g, b);
   }
   if (number == 0 || number == 2 || number == 3 || number == 5 || number == 7 || number == 8 || number == 9) {
@@ -257,7 +304,7 @@ void showNumber(int value, int display, int r, int g, int b) {
   if (number == 0 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9) {
     segmentN(display, 5, r, g, b);
   }
-  if (number == 2 || number == 3 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9) {
+  if (number == 2 || number == 3 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9 || number == -1 ) {
     segmentN(display, 6, r, g, b);
   }
 }
@@ -330,6 +377,15 @@ void deldel(int xtime) {
 void clearLEDs() {
   for (int i = 0; i < LED_COUNT; i++) {
     strip.setPixelColor(i, 0);
+  }
+}
+
+void resetMode() {
+  if (mode>0){
+    runningTime = 0;
+  }
+  if (mode<0){
+    runningTime = setTime;
   }
 }
 
