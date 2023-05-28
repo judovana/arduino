@@ -97,7 +97,7 @@ void setupMode() {
     if (a >= 35) {
       Serial.print("Pressed: ");
       Serial.println(key);
-      setupTimeOut = 0;
+      setupTimeOut = -1;
       if (key == '#') {
         setupState = 0;
         break;
