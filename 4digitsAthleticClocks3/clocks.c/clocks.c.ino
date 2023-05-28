@@ -45,7 +45,7 @@ Keypad keypad_1 = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
-int brightness = 27*2;
+int brightness = 27 * 2;
 int mode = 1;
 int setTime = 3600;
 int runningTime = 0;  //seconds
@@ -103,7 +103,7 @@ void setupMode() {
       }
       if (setupState == 2) {  //time seting
         showNumber(mode, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
-        showNumber(brightness/27, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+        showNumber(brightness / 27, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
       }
       strip.show();
     }
@@ -151,7 +151,7 @@ void setupMode() {
         if (a >= 48 || a <= 57) { /*0-9*/
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
-            if(pressedNumberToAdjust%2 == 1) {
+            if (pressedNumberToAdjust % 2 == 1) {
               mode = 1;
             } else {
               mode = -1;
@@ -201,11 +201,11 @@ void runtimeMode() {
   //runningTime %= 120; //test, Reset x after 2minutes
   //runningTime %= 5400; //Reset x after 90minutes
   runningTime %= setTime;  //Reset x after 90minutes
-  if (runningTime<0){
+  if (runningTime < 0) {
     runningTime = setTime;
   }
-  if (runningTime == 0) {  /*FIXME this is not viable, is causing dealy in counter*/
-    freqout(4000, 100);    /*It is here for hackish non zero only*/
+  if (runningTime == 0) { /*FIXME this is not viable, is causing dealy in counter*/
+    freqout(4000, 100);   /*It is here for hackish non zero only*/
   }
   Serial.print(runningTime);
   Serial.print("/");
@@ -259,7 +259,7 @@ void showNumberWithDeadline(int value, int display, int max) {
       b = brightness;
     }
   }
-  if (mode<0){
+  if (mode < 0) {
     //swap in countdown mode
     int swapRG = g;
     g = r;
@@ -292,10 +292,10 @@ void showNumber(int value, int display, int r, int g, int b) {
   if (number == 0 || number == 2 || number == 3 || number == 5 || number == 6 || number == 8) {
     segmentN(display, 1, r, g, b);
   }
-  if (number == 0 || number == 1 || number == 3 || number == 4 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9 || number == -1 ) {
+  if (number == 0 || number == 1 || number == 3 || number == 4 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9 || number == -1) {
     segmentN(display, 2, r, g, b);
   }
-  if (number == 0 || number == 1 || number == 2 || number == 3 || number == 4 || number == 7 || number == 8 || number == 9 || number == -1 ) {
+  if (number == 0 || number == 1 || number == 2 || number == 3 || number == 4 || number == 7 || number == 8 || number == 9 || number == -1) {
     segmentN(display, 3, r, g, b);
   }
   if (number == 0 || number == 2 || number == 3 || number == 5 || number == 7 || number == 8 || number == 9) {
@@ -304,7 +304,7 @@ void showNumber(int value, int display, int r, int g, int b) {
   if (number == 0 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9) {
     segmentN(display, 5, r, g, b);
   }
-  if (number == 2 || number == 3 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9 || number == -1 ) {
+  if (number == 2 || number == 3 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9 || number == -1) {
     segmentN(display, 6, r, g, b);
   }
 }
@@ -381,10 +381,10 @@ void clearLEDs() {
 }
 
 void resetMode() {
-  if (mode>0){
+  if (mode > 0) {
     runningTime = 0;
   }
-  if (mode<0){
+  if (mode < 0) {
     runningTime = setTime;
   }
 }
