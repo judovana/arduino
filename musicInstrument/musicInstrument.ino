@@ -49,8 +49,8 @@ int freqs[rows][cols] =
   {246,493,987,1975}
 };
 
-byte rowPins[rows] = {9,8,7,6};        
-byte colPins[cols]= {5,4,3,2};
+byte rowPins[rows] = {12,11,10,9};
+byte colPins[cols]= {8,4,3,2};
 
 Keypad keypad_1 = Keypad( makeKeymap(keys), rowPins, colPins, rows, cols ); 
 
@@ -69,6 +69,7 @@ void loop(){
     bool played = false;
     if (a>=35) {
       Serial.println(key);
+      Serial.println(a);
       for(int x = 0; x<rows; x++) {
         for(int y = 0; y<rows; y++) {
           if (key == keys[x][y]) {
