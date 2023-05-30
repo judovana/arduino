@@ -58,6 +58,36 @@ int runningTime = 0;  //seconds
 int setupState = 0;
 int setupTimeOutMax = 100;
 
+#include <EEPROM.h>
+void saveInt(int address, int i) {
+  EEPROM.write(address, i >> 8);
+  EEPROM.write(address + 1, i & 0xFF);
+}
+void save() {
+  saveInt(0, 2236);
+  saveInt(2, brightness);
+  saveInt(4, mode);
+  saveInt(6, setTime);
+  saveInt(8, 1236);
+  Serial.println("saved");
+}
+int loadInt(int address) {
+  return (EEPROM.read(address) << 8) + EEPROM.read(address + 1);
+}
+void load() {
+  int cookie1 = loadInt(0);
+  int cookie2 = loadInt(8);
+  if (cookie1 == 2236 && cookie2 == 1236) {
+    brightness = loadInt(2);
+    mode = loadInt(4);
+    setTime = loadInt(6);
+    Serial.println("loaded values");
+  } else {
+    Serial.println("Not loading, invalid magic bytes");
+  }
+  resetTimes(false);
+}
+
 struct ParsedTime {
   int md1;
   int md2;  //minute digit 1, minute digit2
@@ -97,7 +127,7 @@ void pause() {
 
 void setup() {
   Serial.begin(9600);
-  resetTimes(false);
+  load();
   del.begin();
   del.show();
   strip.begin();
@@ -157,6 +187,7 @@ void setupMode() {
       setupTimeOut = -1;
       if (key == '#') {
         setupState = 0;
+        save();
         break;
       }
       if (key == '*') {
@@ -242,6 +273,7 @@ void setupMode() {
     Serial.println(setupTimeOut);
     if (setupTimeOut > setupTimeOutMax) {
       setupState = 0;
+      save();
       break;
     }
     delay(99);
