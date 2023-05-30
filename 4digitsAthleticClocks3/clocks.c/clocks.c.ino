@@ -54,7 +54,7 @@ int brightness = 10;
 int mode = -1;
 int setTime = 300;
 int runningTime = 0;  //seconds
-                      
+
 int setupState = 0;
 int setupTimeOutMax = 100;
 
@@ -67,7 +67,7 @@ struct ParsedTime {
 
 void setup() {
   Serial.begin(9600);
-  if (mode < 0 ) {
+  if (mode < 0) {
     runningTime = setTime;
   }
   del.begin();
@@ -113,10 +113,10 @@ void setupMode() {
         showNumber(mode, 3, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
       }
       if (setupState == 3) {  //brightness
-      ParsedTime parsedbr = parseInt(brightness);
-      showNumber(parsedbr.md2, 1, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
-      showNumber(parsedbr.sd1, 2, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
-      showNumber(parsedbr.sd2, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+        ParsedTime parsedbr = parseInt(brightness);
+        showNumber(parsedbr.md2, 1, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+        showNumber(parsedbr.sd1, 2, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+        showNumber(parsedbr.sd2, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
       }
       strip.show();
     }
@@ -136,7 +136,7 @@ void setupMode() {
         }
       }
       //reacting
-      if (setupState == 1) {  //time seting
+      if (setupState == 1) {      //time seting
         if (a >= 48 && a <= 57) { /*0-9*/
           ParsedTime current = parseTime(setTime);
           int pressedNumberToAdjust = a - 48;
@@ -160,7 +160,7 @@ void setupMode() {
           resetMode();
         }
       }
-      if (setupState == 2) {  //stopwatch/coountdown mode
+      if (setupState == 2) {      //stopwatch/coountdown mode
         if (a >= 48 && a <= 57) { /*0-9*/
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
@@ -173,7 +173,7 @@ void setupMode() {
           }
         }
       }
-      if (setupState == 3) {  //brightness
+      if (setupState == 3) {      //brightness
         if (a >= 48 && a <= 57) { /*0-9*/
           ParsedTime parsedbr = parseInt(brightness);
           int pressedNumberToAdjust = a - 48;
@@ -197,7 +197,7 @@ void setupMode() {
             parsedbr.sd2 = pressedNumberToAdjust;
           }
           brightness = calcInt(parsedbr);
-          if (brightness>250) {
+          if (brightness > 250) {
             brightness = 250;
           }
           pageSetupSelect++;
@@ -218,7 +218,7 @@ void setupMode() {
 }
 
 int calcTime(struct ParsedTime parsed) {
-  int r =  parsed.md1 * 10 * 60 + parsed.md2 * 60 + parsed.sd1 * 10 + parsed.sd2;
+  int r = parsed.md1 * 10 * 60 + parsed.md2 * 60 + parsed.sd1 * 10 + parsed.sd2;
   debugCalc("Changed time ", parsed, r);
   return r;
 }
@@ -236,7 +236,7 @@ struct ParsedTime parseTime(int seconds) {
 }
 
 int calcInt(struct ParsedTime parsed) {
-  int r =  parsed.md1 * 1000 + parsed.md2 * 100 + parsed.sd1 * 10 + parsed.sd2;
+  int r = parsed.md1 * 1000 + parsed.md2 * 100 + parsed.sd1 * 10 + parsed.sd2;
   debugCalc("Changed int ", parsed, r);
   return r;
 }
