@@ -16,6 +16,9 @@ Controller for https://github.com/judovana/FlashFreeBoardDesktop
 ## globus/globus.c
 It just programmed one led, to be glued to battery, and then light for ever in the middle of puzzle globe.
 
+## musicInstrument
+Demo for keybard + speaker
+
 ## v3 are fully controllable gym clocks
  * 'A' pause. Unpause by any key.
  * 'D' reset - hard to press. If you are paused, then reset is easy to press/.
