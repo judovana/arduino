@@ -65,11 +65,39 @@ struct ParsedTime {
   int sd2;
 };
 
-void setup() {
-  Serial.begin(9600);
+void resetTimes(bool play) {
+  Serial.println("Reset: ");
+  if (play) {
+    freqout(593, 50);
+  }
   if (mode < 0) {
     runningTime = setTime;
+  } else {
+    runningTime = 0;
   }
+}
+
+void pause() {
+  Serial.println("Paused: ");
+  freqout(393, 50);
+  while (1) {
+    delay(99);
+    char key = keypad_1.getKey();
+    int a = (int)key;
+    if (a >= 35) {
+      if (key == 'D') {
+        resetTimes(true);
+      } else {
+        freqout(393, 50);
+      }
+      break;
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  resetTimes(false);
   del.begin();
   del.show();
   strip.begin();
@@ -82,6 +110,9 @@ void setup() {
       Serial.println(key);
       if (key == '*') {
         setupState = 1;
+      }
+      if (key == 'D') {
+        resetTimes(true);
       }
     }
     if (setupState == 0) {
@@ -274,6 +305,13 @@ void timeMode(ParsedTime parsed) {
   for (int i = 0; i < 10; i++) {
     deldel(i);
     del.show();
+    char key = keypad_1.getKey();
+    int a = (int)key;
+    if (a >= 35) {
+      if (key == 'A') {
+        pause();
+      }
+    }
     delay(99);
   }
   clearLEDs();
