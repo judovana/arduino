@@ -1,8 +1,13 @@
+int laudness = 1;
+void freqout(int freq, int t) {
+  freqoutImpl(freq * laudness, t);
+}
+
 #define outpin 13  // audio out to speaker or amp
 //17 for C0 - 7902 for h8
 //261 for c4- 493 for h4
 //https://muted.io/note-frequencies/
-void freqout(int freq, int t)  // freq in hz, t in ms
+void freqoutImpl(int freq, int t)  // freq in hz, t in ms
 {
   Serial.print("playing ");
   Serial.print(freq);
@@ -45,11 +50,11 @@ Keypad keypad_1 = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
-int brightness = 27 * 2;
-int mode = 1;
-int setTime = 3600;
+int brightness = 10;
+int mode = -1;
+int setTime = 300;
 int runningTime = 0;  //seconds
-                      //runningTime= 5200; //test
+                      
 int setupState = 0;
 int setupTimeOutMax = 100;
 
@@ -62,6 +67,9 @@ struct ParsedTime {
 
 void setup() {
   Serial.begin(9600);
+  if (mode < 0 ) {
+    runningTime = setTime;
+  }
   del.begin();
   del.show();
   strip.begin();
@@ -101,9 +109,14 @@ void setupMode() {
         showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
         showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
-      if (setupState == 2) {  //time seting
-        showNumber(mode, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
-        showNumber(brightness / 27, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+      if (setupState == 2) {  //stopwatch/countdown
+        showNumber(mode, 3, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+      }
+      if (setupState == 3) {  //brightness
+      ParsedTime parsedbr = parseInt(brightness);
+      showNumber(parsedbr.md2, 1, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+      showNumber(parsedbr.sd1, 2, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+      showNumber(parsedbr.sd2, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
       }
       strip.show();
     }
@@ -116,15 +129,16 @@ void setupMode() {
         break;
       }
       if (key == '*') {
+        pageSetupSelect = 0;
         setupState += 1;
-        if (setupState > 2) {
+        if (setupState > 3) {
           setupState = 1;
         }
       }
       //reacting
       if (setupState == 1) {  //time seting
-        ParsedTime current = parseTime(setTime);
-        if (a >= 48 || a <= 57) { /*0-9*/
+        if (a >= 48 && a <= 57) { /*0-9*/
+          ParsedTime current = parseTime(setTime);
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
             current.md1 = pressedNumberToAdjust;
@@ -146,9 +160,8 @@ void setupMode() {
           resetMode();
         }
       }
-      if (setupState == 2) {  //time seting
-        ParsedTime current = parseTime(setTime);
-        if (a >= 48 || a <= 57) { /*0-9*/
+      if (setupState == 2) {  //stopwatch/coountdown mode
+        if (a >= 48 && a <= 57) { /*0-9*/
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
             if (pressedNumberToAdjust % 2 == 1) {
@@ -158,11 +171,37 @@ void setupMode() {
             }
             resetMode();
           }
+        }
+      }
+      if (setupState == 3) {  //brightness
+        if (a >= 48 && a <= 57) { /*0-9*/
+          ParsedTime parsedbr = parseInt(brightness);
+          int pressedNumberToAdjust = a - 48;
+          if (pageSetupSelect == 0) {
+            parsedbr.md2 = pressedNumberToAdjust;
+            Serial.println(parsedbr.md2);
+            if (parsedbr.md2 > 2) {
+              parsedbr.md2 = 2;
+            }
+            Serial.println(parsedbr.md2);
+          }
           if (pageSetupSelect == 1) {
-            brightness = pressedNumberToAdjust * 27;
+            parsedbr.sd1 = pressedNumberToAdjust;
+            if (parsedbr.md2 == 2) {
+              if (parsedbr.sd1 > 4) {
+                parsedbr.sd1 = 4;
+              }
+            }
+          }
+          if (pageSetupSelect == 2) {
+            parsedbr.sd2 = pressedNumberToAdjust;
+          }
+          brightness = calcInt(parsedbr);
+          if (brightness>250) {
+            brightness = 250;
           }
           pageSetupSelect++;
-          if (pageSetupSelect > 1) {
+          if (pageSetupSelect > 2) {
             pageSetupSelect = 0;
           }
         }
@@ -179,7 +218,9 @@ void setupMode() {
 }
 
 int calcTime(struct ParsedTime parsed) {
-  return parsed.md1 * 10 * 60 + parsed.md2 * 60 + parsed.sd1 * 10 + parsed.sd2;
+  int r =  parsed.md1 * 10 * 60 + parsed.md2 * 60 + parsed.sd1 * 10 + parsed.sd2;
+  debugCalc("Changed time ", parsed, r);
+  return r;
 }
 
 struct ParsedTime parseTime(int seconds) {
@@ -190,6 +231,23 @@ struct ParsedTime parseTime(int seconds) {
   int md1 = minute / 10;
   int md2 = minute % 10;
   struct ParsedTime parsed = { md1, md2, sd1, sd2 };
+  debugParse("Changed time ", seconds, parsed);
+  return parsed;
+}
+
+int calcInt(struct ParsedTime parsed) {
+  int r =  parsed.md1 * 1000 + parsed.md2 * 100 + parsed.sd1 * 10 + parsed.sd2;
+  debugCalc("Changed int ", parsed, r);
+  return r;
+}
+
+struct ParsedTime parseInt(int digit) {
+  int sd2 = digit % 10;
+  int sd1 = (digit / 10) % 10;
+  int md2 = (digit / 100) % 10;
+  int md1 = (digit / 1000);
+  struct ParsedTime parsed = { md1, md2, sd1, sd2 };
+  debugParse("Changed int ", digit, parsed);
   return parsed;
 }
 
@@ -390,12 +448,20 @@ void resetMode() {
 }
 
 void debugTime(ParsedTime parsed) {
+  debugTime(parsed, true);
+}
+
+void debugTime(ParsedTime parsed, bool nw) {
   Serial.print("time: ");
   Serial.print(parsed.md1);
   Serial.print(parsed.md2);
   Serial.print(":");
   Serial.print(parsed.sd1);
-  Serial.println(parsed.sd2);
+  if (nw) {
+    Serial.println(parsed.sd2);
+  } else {
+    Serial.print(parsed.sd2);
+  }
 }
 
 void debugNumberShow(int value, int display, int r, int g, int b) {
@@ -410,4 +476,18 @@ void debugNumberShow(int value, int display, int r, int g, int b) {
   Serial.print(",");
   Serial.print(b);
   Serial.println("");
+}
+
+void debugParse(char title[], int orig, ParsedTime result) {
+  Serial.print(title);
+  Serial.print(orig);
+  Serial.print(" to: ");
+  debugTime(result);
+}
+
+void debugCalc(char title[], ParsedTime orig, int result) {
+  Serial.print(title);
+  debugTime(orig, false);
+  Serial.print(" to: ");
+  Serial.print(result);
 }
