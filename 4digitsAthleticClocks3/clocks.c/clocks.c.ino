@@ -88,7 +88,7 @@ void pause() {
       if (key == 'D') {
         resetTimes(true);
       } else {
-        freqout(393, 50);
+        freqout(293, 50);
       }
       break;
     }
