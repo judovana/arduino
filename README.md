@@ -24,6 +24,7 @@ Demo for keybard + speaker
  * 'D' reset - hard to press. If you are paused, then reset is easy to press/.
  * '*' will enter the menu. The time is stopped now. It is intentionally ahrd to press simialry as reset.
  * '#' will exit menu immediately and save settings
+ * position in setup is visibble on middle delimiter strip
  * now you can edit time which is the deadline for clock watch or timer start for count down
    * red is the digit yo are modyfying now, green reflects current setup
    * if yo do not edit it, the time will persits as it was, otherwise it will reset
