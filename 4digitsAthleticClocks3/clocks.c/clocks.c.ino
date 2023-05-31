@@ -50,7 +50,7 @@ Keypad keypad_1 = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
-int brightness = 10;
+int brightness = 12;
 int mode = -1;
 int setTime = 300;
 int runningTime = 0;  //seconds
