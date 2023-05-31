@@ -171,6 +171,7 @@ void setupMode() {
     int a = (int)key;
     ////pritning, only twice per second, otherwise it will go mad
     if (setupTimeOut % 5 == 0) {
+      deldel(setupState);
       clearLEDs();
       if (setupState == 1) {  //time seting
         ParsedTime current = parseTime(setTime);
@@ -479,43 +480,21 @@ void deldel(int xtime) {
   }
   int x = xtime % 10;
   if (x == 9) {
-    for (int i = 1; i < LED_COUNT_DEL - 1; i++) {
-      del.setPixelColor(i, brightness / 2, brightness / 2, brightness / 2);
+    for (int i = 0; i < LED_COUNT_DEL - 1; i++) {
+      del.setPixelColor(i, (brightness + 1) / 2, (brightness + 1) / 2, (brightness + 1) / 2);
+      Serial.print("-");
     }
   } else {
-    int color = x / 3;
-    int r = 0;
-    int g = 0;
-    int b = 0;
-    if (color == 0) {
-      r = brightness;
-      g = 0;
-      b = 0;
-    } else if (color == 1) {
-      r = 0;
-      g = 0;
-      b = brightness;
-    } else if (color == 2) {
-      r = 0;
-      g = brightness;
-      b = 0;
+    for (int i = 0; i < xtime; i++) {
+      del.setPixelColor(i, brightness, 0, brightness);
+      Serial.print("o");
     }
-    if (x % 3 == 0) {
-      del.setPixelColor(0, r, g, b);
-      del.setPixelColor(8, r, g, b);
-    } else if (x % 3 == 1) {
-      del.setPixelColor(0, r, g, b);
-      del.setPixelColor(1, r, g, b);
-      del.setPixelColor(2, r, g, b);
-      del.setPixelColor(6, r, g, b);
-      del.setPixelColor(7, r, g, b);
-      del.setPixelColor(8, r, g, b);
-    } else if (x % 3 == 2) {
-      for (int i = 0; i < LED_COUNT_DEL; i++) {
-        del.setPixelColor(i, r, g, b);
-      }
+    for (int i = xtime; i < LED_COUNT_DEL - 1; i++) {
+      del.setPixelColor(i, 0, brightness, brightness);
+      Serial.print("x");
     }
   }
+  Serial.println("");
 }
 
 
