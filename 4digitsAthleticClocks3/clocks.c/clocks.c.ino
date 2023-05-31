@@ -51,6 +51,8 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NE
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
 int brightness = 12;
+//if true, then brightnes is loaded from eeprom
+int saveBrightness = 0;  //false
 int mode = -1;
 int setTime = 300;
 int runningTime = 0;  //seconds
@@ -58,17 +60,21 @@ int runningTime = 0;  //seconds
 int setupState = 0;
 int setupTimeOutMax = 100;
 
+const int saveCokie1 = 2237;
+const int saveCokie2 = 1236;
+
 #include <EEPROM.h>
 void saveInt(int address, int i) {
   EEPROM.write(address, i >> 8);
   EEPROM.write(address + 1, i & 0xFF);
 }
 void save() {
-  saveInt(0, 2236);
-  saveInt(2, brightness);
-  saveInt(4, mode);
-  saveInt(6, setTime);
-  saveInt(8, 1236);
+  saveInt(0, saveCokie1);
+  saveInt(2, saveBrightness);
+  saveInt(4, brightness);
+  saveInt(6, mode);
+  saveInt(8, setTime);
+  saveInt(10, saveCokie2);
   Serial.println("saved");
 }
 int loadInt(int address) {
@@ -76,11 +82,14 @@ int loadInt(int address) {
 }
 void load() {
   int cookie1 = loadInt(0);
-  int cookie2 = loadInt(8);
-  if (cookie1 == 2236 && cookie2 == 1236) {
-    brightness = loadInt(2);
-    mode = loadInt(4);
-    setTime = loadInt(6);
+  int cookie2 = loadInt(10);
+  if (cookie1 == saveCokie1 && cookie2 == saveCokie2) {
+    saveBrightness = loadInt(2);
+    if (saveBrightness > 0) {
+      brightness = loadInt(4);
+    }
+    mode = loadInt(6);
+    setTime = loadInt(8);
     Serial.println("loaded values");
   } else {
     Serial.println("Not loading, invalid magic bytes");
@@ -175,9 +184,10 @@ void setupMode() {
       }
       if (setupState == 3) {  //brightness
         ParsedTime parsedbr = parseInt(brightness);
-        showNumber(parsedbr.md2, 1, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
-        showNumber(parsedbr.sd1, 2, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
-        showNumber(parsedbr.sd2, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+        showNumber(saveBrightness, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+        showNumber(parsedbr.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+        showNumber(parsedbr.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+        showNumber(parsedbr.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
       strip.show();
     }
@@ -240,6 +250,13 @@ void setupMode() {
           ParsedTime parsedbr = parseInt(brightness);
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
+            if (pressedNumberToAdjust == 1) {
+              saveBrightness = pressedNumberToAdjust;
+            } else {
+              saveBrightness = 0;
+            }
+          }
+          if (pageSetupSelect == 1) {
             parsedbr.md2 = pressedNumberToAdjust;
             Serial.println(parsedbr.md2);
             if (parsedbr.md2 > 2) {
@@ -247,7 +264,7 @@ void setupMode() {
             }
             Serial.println(parsedbr.md2);
           }
-          if (pageSetupSelect == 1) {
+          if (pageSetupSelect == 2) {
             parsedbr.sd1 = pressedNumberToAdjust;
             if (parsedbr.md2 == 2) {
               if (parsedbr.sd1 > 4) {
@@ -255,7 +272,7 @@ void setupMode() {
               }
             }
           }
-          if (pageSetupSelect == 2) {
+          if (pageSetupSelect == 3) {
             parsedbr.sd2 = pressedNumberToAdjust;
           }
           brightness = calcInt(parsedbr);
@@ -263,7 +280,7 @@ void setupMode() {
             brightness = 250;
           }
           pageSetupSelect++;
-          if (pageSetupSelect > 2) {
+          if (pageSetupSelect > 3) {
             pageSetupSelect = 0;
           }
         }
