@@ -33,6 +33,8 @@ Demo for keybard + speaker
     *  as time, you can edit brightness of leds
     *  it is 0-250
     *  be aware!  if yo use 0, the leds will be off, and you are on audio only!
+    *   the firt number do not belong to the brightnes, but is flag 0/1 - if on 0, the brightness will not be saved, but always reset.
+      *   That is another precaution to unintentionally blank your s clock for ever
  *  (todo, iterations, breaks, sound settings (1/2, 1/3, 3,2,1) and so on...)
  *  another '*' will move you to beggining of setup - time
  *  once setup ends, it is saved for next launch (including brigntess!)
