@@ -3,7 +3,9 @@ void freqout(int freq, int t) {
   freqoutImpl(freq * laudness, t);
 }
 
-#define outpin 13  // audio out to speaker or amp
+#define outpin1 13  // audio out to speaker or amp
+#define outpin2 6   // stereo
+
 //17 for C0 - 7902 for h8
 //261 for c4- 493 for h4
 //https://muted.io/note-frequencies/
@@ -16,16 +18,20 @@ void freqoutImpl(int freq, int t)  // freq in hz, t in ms
   Serial.println(" ms");
   int hperiod;  //calculate 1/2 period in us
   long cycles, i;
-  pinMode(outpin, OUTPUT);                 // turn on output pin
+  pinMode(outpin1, OUTPUT);                 // turn on output pin
+  pinMode(outpin2, OUTPUT);                
   hperiod = (500000 / freq) - 7;           // subtract 7 us to make up for digitalWrite overhead
   cycles = ((long)freq * (long)t) / 1000;  // calculate cycles
   for (i = 0; i <= cycles; i++) {          // play note for t ms
-    digitalWrite(outpin, HIGH);
+    digitalWrite(outpin1, HIGH);
+    digitalWrite(outpin2, HIGH);
     delayMicroseconds(hperiod);
-    digitalWrite(outpin, LOW);
+    digitalWrite(outpin1, LOW);
+    digitalWrite(outpin2, LOW);
     delayMicroseconds(hperiod - 1);  // - 1 to make up for digitaWrite overhead
   }
-  pinMode(outpin, INPUT);  // shut off pin to avoid noise from other operations
+  pinMode(outpin1, INPUT);  // shut off pin to avoid noise from other operations
+  pinMode(outpin2, INPUT);
 }
 
 #include <Keypad.h>
