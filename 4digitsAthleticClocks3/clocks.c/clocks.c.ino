@@ -375,13 +375,19 @@ void timeMode(ParsedTime parsed) {
     }
     delay(99);
   }
+  showTimeWithCorrectDeadline(parsed);
+  delay(9);  //todo replace by dynamic calculation of how much the runtimeMode had taken long t = millis()/micros() 50days/70minutes
+}
+
+void showTimeWithCorrectDeadline(ParsedTime  parsed) {
+  ParsedTime parsedOriginTime=parseTime(setTime);
+  //todo cal the real deadline for the 5959
   clearLEDs();
   showNumberWithDeadline(parsed.md1, 0, 5);
   showNumberWithDeadline(parsed.md2, 1, 9);
   showNumberWithDeadline(parsed.sd1, 2, 5);
   showNumberWithDeadline(parsed.sd2, 3, 9);
   strip.show();
-  delay(9);  //10*99+9 a bit faster is better then a bit slower
 }
 
 void showNumberWithDeadline(int value, int display, int max) {
