@@ -93,7 +93,11 @@ void load() {
     saveBrightness = loadInt(2);
     if (saveBrightness > 0) {
       brightness = loadInt(4);
+      Serial.print("loaded bightness to:");
+    } else {
+      Serial.println("reset bightness to:");
     }
+    Serial.println(brightness);
     mode = loadInt(6);
     setTime = loadInt(8);
     Serial.println("loaded values");
