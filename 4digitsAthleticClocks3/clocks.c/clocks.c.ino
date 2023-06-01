@@ -18,8 +18,8 @@ void freqoutImpl(int freq, int t)  // freq in hz, t in ms
   Serial.println(" ms");
   int hperiod;  //calculate 1/2 period in us
   long cycles, i;
-  pinMode(outpin1, OUTPUT);                 // turn on output pin
-  pinMode(outpin2, OUTPUT);                
+  pinMode(outpin1, OUTPUT);  // turn on output pin
+  pinMode(outpin2, OUTPUT);
   hperiod = (500000 / freq) - 7;           // subtract 7 us to make up for digitalWrite overhead
   cycles = ((long)freq * (long)t) / 1000;  // calculate cycles
   for (i = 0; i <= cycles; i++) {          // play note for t ms
@@ -379,23 +379,37 @@ void timeMode(ParsedTime parsed) {
   delay(9);  //todo replace by dynamic calculation of how much the runtimeMode had taken long t = millis()/micros() 50days/70minutes
 }
 
-void showTimeWithCorrectDeadline(ParsedTime  parsed) {
-  ParsedTime parsedOriginTime=parseTime(setTime);
+void showTimeWithCorrectDeadline(ParsedTime parsed) {
+  ParsedTime parsedOriginTime = parseTime(setTime);
   //todo cal the real deadline for the 5959
   clearLEDs();
-  showNumberWithDeadline(parsed.md1, 0, 5);
-  showNumberWithDeadline(parsed.md2, 1, 9);
-  showNumberWithDeadline(parsed.sd1, 2, 5);
-  showNumberWithDeadline(parsed.sd2, 3, 9);
+  showNumberWithDeadline(parsed.md1, 0, parsedOriginTime.md1);
+  if (parsedOriginTime.md1 == 0) {
+    showNumberWithDeadline(parsed.md2, 1, parsedOriginTime.md2);
+  } else {
+    showNumberWithDeadline(parsed.md2, 1, 9);
+  }
+  if (parsedOriginTime.md1 == 0 && parsedOriginTime.md2 == 0) {
+    showNumberWithDeadline(parsed.sd1, 2, parsedOriginTime.sd1);
+  } else {
+    showNumberWithDeadline(parsed.sd1, 2, 5);
+  }
+  if (parsedOriginTime.md1 == 0 && parsedOriginTime.md2 == 0 && parsedOriginTime.sd1 == 0) {
+    showNumberWithDeadline(parsed.sd2, 3, parsedOriginTime.sd2);
+  } else {
+    showNumberWithDeadline(parsed.sd2, 3, 9);
+  }
   strip.show();
 }
 
 void showNumberWithDeadline(int value, int display, int max) {
+  Serial.print(max);
+  Serial.print(": ");
   int r = 0;
   int g = 0;
   int b = 0;
   if (max <= 0) {
-    b = brightness;
+    r = brightness;
   } else if (max == 1) {
     if (value == 0) {
       g = brightness;
@@ -499,19 +513,19 @@ void deldel(int xtime) {
   if (x == 9) {
     for (int i = 0; i < LED_COUNT_DEL - 1; i++) {
       del.setPixelColor(i, (brightness + 1) / 2, (brightness + 1) / 2, (brightness + 1) / 2);
-      Serial.print("-");
+      //Serial.print("-");
     }
   } else {
     for (int i = 0; i < xtime; i++) {
       del.setPixelColor(i, brightness, 0, brightness);
-      Serial.print("o");
+      //Serial.print("o");
     }
     for (int i = xtime; i < LED_COUNT_DEL - 1; i++) {
       del.setPixelColor(i, 0, brightness, brightness);
-      Serial.print("x");
+      //Serial.print("x");
     }
   }
-  Serial.println("");
+  //Serial.println("");
 }
 
 
