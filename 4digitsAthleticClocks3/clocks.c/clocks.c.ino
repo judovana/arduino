@@ -182,6 +182,7 @@ void setupMode() {
     ////pritning, only twice per second, otherwise it will go mad
     if (setupTimeOut % 5 == 0) {
       deldel(setupState);
+      del.show();
       clearLEDs();
       if (setupState == 1) {  //time seting
         ParsedTime current = parseTime(setTime);
