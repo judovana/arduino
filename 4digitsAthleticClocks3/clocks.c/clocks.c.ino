@@ -94,6 +94,7 @@ int saveBrightness = 0;  //false
 int mode = -1;
 int setTime = 300;
 int runningTime = 0;  //seconds
+unsigned long tStart = 0;
 
 int setupState = 0;
 int setupTimeOutMax = 100;
@@ -184,6 +185,9 @@ void setup() {
   strip.begin();
   strip.show();
   while (1) {
+    tStart = millis();
+    Serial.print("Start: ");
+    Serial.println(tStart);
     char key = keypad_1.getKey();
     int a = (int)key;
     if (a >= 35) {
@@ -201,6 +205,8 @@ void setup() {
     } else {
       setupMode();
     }
+    Serial.print("Stop: ");
+    Serial.println(millis());
   }
 }
 
@@ -405,10 +411,23 @@ void timeMode(ParsedTime parsed) {
         pause();
       }
     }
-    delay(99);
+    delay(80);
   }
   showTimeWithCorrectDeadline(parsed);
-  delay(9);  //todo replace by dynamic calculation of how much the runtimeMode had taken long t = millis()/micros() 50days/70minutes
+  unsigned long now = millis();
+  Serial.println(now);
+  long shouldWait = now - tStart;
+  if (shouldWait > 0 && shouldWait < 1000000000) {
+    if (shouldWait > 1000) {
+      Serial.println("Not waiting! Took to much!");
+    } else {
+      Serial.print("wating: ");
+      Serial.println(1000 - shouldWait);
+      delay(1000 - shouldWait);
+    }
+  } else {
+    delay(80);  //every 70 days go a bit wild
+  }
 }
 
 void showTimeWithCorrectDeadline(ParsedTime parsed) {
