@@ -2,7 +2,7 @@ int laudness = 0;
 int L = 1;
 int R = 1;
 void freqout(int freq, int t) {
-  freqoutImpl(L == 1, R == 1, freq * (laudness * 2) + 1, t);
+  freqoutImpl(L == 1, R == 1, freq * (laudness * 2 + 1), t);
 }
 
 #define outpin1 13  // audio out to speaker or amp
