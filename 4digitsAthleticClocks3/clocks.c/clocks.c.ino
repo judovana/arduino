@@ -190,18 +190,6 @@ void setup() {
     tStart = millis();
     Serial.print("Start: ");
     Serial.println(tStart);
-    char key = keypad_1.getKey();
-    int a = (int)key;
-    if (a >= 35) {
-      Serial.print("Pressed: ");
-      Serial.println(key);
-      if (key == '*') {
-        setupState = 1;
-      }
-      if (key == 'D') {
-        resetTimes(true);
-      }
-    }
     if (setupState == 0) {
       runtimeMode();
     } else {
@@ -409,8 +397,13 @@ void timeMode(ParsedTime parsed) {
     char key = keypad_1.getKey();
     int a = (int)key;
     if (a >= 35) {
+      Serial.print("Pressed: ");
+      Serial.println(key);
       if (key == 'A') {
         pause();
+      }
+      if (key == '*') {
+        setupState = 1;
       }
     }
     delay(80);
