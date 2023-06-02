@@ -1,6 +1,8 @@
-int laudness = 1;
+int laudness = 0;
+int L = 1;
+int R = 1;
 void freqout(int freq, int t) {
-  freqoutImpl(freq * laudness, t);
+  freqoutImpl(L == 1, R == 1, freq * (laudness * 2) + 1, t);
 }
 
 #define outpin1 13  // audio out to speaker or amp
@@ -9,29 +11,59 @@ void freqout(int freq, int t) {
 //17 for C0 - 7902 for h8
 //261 for c4- 493 for h4
 //https://muted.io/note-frequencies/
-void freqoutImpl(int freq, int t)  // freq in hz, t in ms
+void freqoutImpl(bool L, bool R, int freq, int t)  // freq in hz, t in ms
 {
-  Serial.print("playing ");
+  if (L) {
+    Serial.print("L");
+  } else {
+    Serial.print("x");
+  }
+  if (L) {
+    Serial.print("R");
+  } else {
+    Serial.print("x");
+  }
+  Serial.print(" playing ");
   Serial.print(freq);
   Serial.print(" Hz for ");
   Serial.print(t);
   Serial.println(" ms");
+  if (L == R == false) {
+    delay(t);
+    return;
+  }
   int hperiod;  //calculate 1/2 period in us
   long cycles, i;
-  pinMode(outpin1, OUTPUT);  // turn on output pin
-  pinMode(outpin2, OUTPUT);
+  if (L) {
+    pinMode(outpin1, OUTPUT);  // turn on output pin
+  }
+  if (R) {
+    pinMode(outpin2, OUTPUT);
+  }
   hperiod = (500000 / freq) - 7;           // subtract 7 us to make up for digitalWrite overhead
   cycles = ((long)freq * (long)t) / 1000;  // calculate cycles
   for (i = 0; i <= cycles; i++) {          // play note for t ms
-    digitalWrite(outpin1, HIGH);
-    digitalWrite(outpin2, HIGH);
+    if (L) {
+      digitalWrite(outpin1, HIGH);
+    }
+    if (R) {
+      digitalWrite(outpin2, HIGH);
+    }
     delayMicroseconds(hperiod);
-    digitalWrite(outpin1, LOW);
-    digitalWrite(outpin2, LOW);
+    if (L) {
+      digitalWrite(outpin1, LOW);
+    }
+    if (R) {
+      digitalWrite(outpin2, LOW);
+    }
     delayMicroseconds(hperiod - 1);  // - 1 to make up for digitaWrite overhead
   }
-  pinMode(outpin1, INPUT);  // shut off pin to avoid noise from other operations
-  pinMode(outpin2, INPUT);
+  if (L) {
+    pinMode(outpin1, INPUT);  // shut off pin to avoid noise from other operations
+  }
+  if (R) {
+    pinMode(outpin2, INPUT);
+  }
 }
 
 #include <Keypad.h>
