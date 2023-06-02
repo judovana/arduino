@@ -88,6 +88,8 @@ Keypad keypad_1 = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
+int soundMap[LED_COUNT_DEL] = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 int brightness = 12;
 //if true, then brightnes is loaded from eeprom
 int saveBrightness = 0;  //false
@@ -557,9 +559,7 @@ void showSequence(int from, int to, int r, int g, int b) {
 }
 
 void deldel(int xtime) {
-  for (int i = 0; i < LED_COUNT_DEL; i++) {
-    del.setPixelColor(i, 0);
-  }
+  clearDelDel();
   int x = xtime % 10;
   if (x == 9) {
     for (int i = 0; i < LED_COUNT_DEL - 1; i++) {
@@ -579,6 +579,17 @@ void deldel(int xtime) {
   //Serial.println("");
 }
 
+void clearDelDel() {
+  for (int i = 0; i < LED_COUNT_DEL; i++) {
+    del.setPixelColor(i, 0);
+  }
+}
+
+void clearAudio() {
+  for (int i = 0; i < LED_COUNT_DEL; i++) {
+    soundMap[i] = 0;
+  }
+}
 
 void clearLEDs() {
   for (int i = 0; i < LED_COUNT; i++) {
