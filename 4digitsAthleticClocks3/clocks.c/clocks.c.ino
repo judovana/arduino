@@ -2,7 +2,7 @@ int laudness = 0;
 int L = 1;
 int R = 1;
 void freqout(int freq, int t) {
-  freqoutImpl(L == 1, R == 1, freq * (laudness * 2 + 1), t);
+  freqoutImpl(L == 1, R == 1, freq * (laudness + 1), t);
 }
 
 #define outpin1 13  // audio out to speaker or amp
@@ -88,7 +88,7 @@ Keypad keypad_1 = Keypad(makeKeymap(keys), rowPins, colPins, rows, cols);
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(LED_COUNT, PIN_NUMBERS, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel del = Adafruit_NeoPixel(LED_COUNT_DEL, PIN_DELIMITER, NEO_GRB + NEO_KHZ800);
 
-int soundMap[LED_COUNT_DEL] = { 0, 0, 0, 0, 0, 0, 0, 0, 0};
+int soundMap[LED_COUNT_DEL] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 int brightness = 12;
 //if true, then brightnes is loaded from eeprom
@@ -376,14 +376,36 @@ void runtimeMode() {
   debugTime(parsed);
   timeMode(parsed);
   runningTime += mode;
-  //runningTime %= 120; //test, Reset x after 2minutes
-  //runningTime %= 5400; //Reset x after 90minutes
+  int detTime = runningTime;
+  if (mode == 1) {
+    detTime = setTime - runningTime;
+  }
+  setSoundMap(0);
+  if (detTime == 3) {
+    soundMap[6] = 700;
+    soundMap[7] = 700;
+    soundMap[8] = 700;
+  } else if (detTime == 2) {
+    soundMap[7] = 800;
+    soundMap[8] = 800;
+  } else if (detTime == 1) {
+    soundMap[8] = 900;
+  } else if (detTime == 0) {
+    setSoundMap(1000);
+  } else if (detTime == setTime / 3) {
+    soundMap[0] = 400;
+    soundMap[1] = 400;
+    soundMap[5] = 400;
+    soundMap[6] = 400;
+    soundMap[8] = 400;
+  } else if (detTime == setTime / 2) {
+    soundMap[0] = 300;
+    soundMap[6] = 300;
+    soundMap[8] = 300;
+  }
   runningTime %= setTime;  //Reset x after 90minutes
   if (runningTime < 0) {
     runningTime = setTime;
-  }
-  if (runningTime == 0) { /*FIXME this is not viable, is causing dealy in counter*/
-    freqout(4000, 100);   /*It is here for hackish non zero only*/
   }
   Serial.print(runningTime);
   Serial.print("/");
@@ -406,7 +428,16 @@ void timeMode(ParsedTime parsed) {
         setupState = 1;
       }
     }
-    delay(80);
+    int standardDealy = 80;
+    if (i < LED_COUNT_DEL) {
+      if (soundMap[i] == 0) {
+        delay(standardDealy);
+      } else {
+        freqout(soundMap[i], standardDealy);
+      }
+    } else {
+      delay(standardDealy);
+    }
   }
   showTimeWithCorrectDeadline(parsed);
   unsigned long now = millis();
@@ -578,9 +609,9 @@ void clearDelDel() {
   }
 }
 
-void clearAudio() {
+void setSoundMap(int x) {
   for (int i = 0; i < LED_COUNT_DEL; i++) {
-    soundMap[i] = 0;
+    soundMap[i] = x;
   }
 }
 
