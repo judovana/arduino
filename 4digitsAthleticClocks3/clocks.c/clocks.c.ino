@@ -247,11 +247,11 @@ void setupMode() {
     int a = (int)key;
     ////pritning, only twice per second, otherwise it will go mad
     if (setupTimeOut % 5 == 0) {
-        Serial.print("menu page: ");
-        Serial.print(setupState);
-        Serial.print(" page seelct: ");
-        Serial.print(pageSetupSelect);
-        Serial.println("");
+      Serial.print("menu page: ");
+      Serial.print(setupState);
+      Serial.print(" page seelct: ");
+      Serial.print(pageSetupSelect);
+      Serial.println("");
       deldel(setupState);
       del.show();
       clearLEDs();
