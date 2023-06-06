@@ -302,6 +302,29 @@ void setupMode() {
           setupState = 1;
         }
       }
+      if (key == 'A') {
+        pageSetupSelect = 0;
+      }
+      if (key == 'B' && (setupState == 1 || setupState == 3 || setupState == 5)) {
+        pageSetupSelect = 1;
+      }
+      if (key == 'B' && (setupState == 4)) {
+        //empty
+      }
+      if (key == 'C' && (setupState == 1 || setupState == 3 || setupState == 5)) {
+        pageSetupSelect = 2;
+      }
+      if (key == 'C' && (setupState == 4)) {
+        pageSetupSelect = 1;
+      }
+      if (key == 'D' && (setupState == 1 || setupState == 3 || setupState == 5)) {
+        pageSetupSelect = 3;
+      }
+      if (key == 'D' && (setupState == 4)) {
+        pageSetupSelect = 2;
+      }
+
+
       //reacting
       if (setupState == 1) {      //time seting
         if (a >= 48 && a <= 57) { /*0-9*/

@@ -25,6 +25,8 @@ Demo for keybard + speaker
  * '*' will enter the menu. The time is stopped now.
    * another '*' turn page in menu.
    * position in setup is visible on middle delimiter strip
+   * In menu, 'A', 'B', 'C' and 'D' will move yo directly to edited number
+     * in some setup pages, where some digit is unused, 'its letter' does nothing
  * '#' will exit menu immediately and save settings
  * first to edit is time which is the deadline for clock watch or timer start for count down
    * red is the digit you are modifying now, green reflects current setup
