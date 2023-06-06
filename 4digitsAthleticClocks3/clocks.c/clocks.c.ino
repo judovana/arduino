@@ -1,6 +1,12 @@
 int laudness = 0;
 int L = 1;
 int R = 1;
+
+int finalSound = 1;
+int halfSound = 1;
+int thirdSound = 1;
+int threeTwoOneSound = 1;
+
 void freqout(int freq, int t) {
   freqoutImpl(L == 1, R == 1, freq * (laudness + 1), t);
 }
@@ -101,7 +107,7 @@ unsigned long tStart = 0;
 int setupState = 0;
 int setupTimeOutMax = 100;
 
-const int saveCokie1 = 2237;
+const int saveCokie1 = 2238;
 const int saveCokie2 = 1236;
 
 #include <EEPROM.h>
@@ -115,7 +121,14 @@ void save() {
   saveInt(4, brightness);
   saveInt(6, mode);
   saveInt(8, setTime);
-  saveInt(10, saveCokie2);
+  saveInt(10, laudness);
+  saveInt(12, L);
+  saveInt(14, R);
+  saveInt(16, finalSound);
+  saveInt(18, halfSound);
+  saveInt(20, thirdSound);
+  saveInt(22, threeTwoOneSound);
+  saveInt(24, saveCokie2);
   Serial.println("saved");
 }
 int loadInt(int address) {
@@ -123,7 +136,7 @@ int loadInt(int address) {
 }
 void load() {
   int cookie1 = loadInt(0);
-  int cookie2 = loadInt(10);
+  int cookie2 = loadInt(24);
   if (cookie1 == saveCokie1 && cookie2 == saveCokie2) {
     saveBrightness = loadInt(2);
     if (saveBrightness > 0) {
@@ -135,6 +148,31 @@ void load() {
     Serial.println(brightness);
     mode = loadInt(6);
     setTime = loadInt(8);
+    laudness = loadInt(10);
+    L = loadInt(12);
+    if (L != 0) {
+      L = 1;
+    }
+    R = loadInt(14);
+    if (R != 0) {
+      R = 1;
+    }
+    finalSound = loadInt(16);
+    if (finalSound != 0) {
+      finalSound = 1;
+    }
+    halfSound = loadInt(18);
+    if (halfSound != 0) {
+      halfSound = 1;
+    }
+    thirdSound = loadInt(20);
+    if (thirdSound != 0) {
+      thirdSound = 1;
+    }
+    threeTwoOneSound = loadInt(22);
+    if (threeTwoOneSound != 0) {
+      threeTwoOneSound = 1;
+    }
     Serial.println("loaded values");
   } else {
     Serial.println("Not loading, invalid magic bytes");
@@ -209,6 +247,11 @@ void setupMode() {
     int a = (int)key;
     ////pritning, only twice per second, otherwise it will go mad
     if (setupTimeOut % 5 == 0) {
+        Serial.print("menu page: ");
+        Serial.print(setupState);
+        Serial.print(" page seelct: ");
+        Serial.print(pageSetupSelect);
+        Serial.println("");
       deldel(setupState);
       del.show();
       clearLEDs();
@@ -229,6 +272,18 @@ void setupMode() {
         showNumber(parsedbr.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
         showNumber(parsedbr.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
+      if (setupState == 4) {  //pitch nothing L/R
+        ParsedTime parsedbr = parseInt(brightness);
+        showNumber(laudness, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+        showNumber(L, 2, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+        showNumber(R, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+      }
+      if (setupState == 5) {  //sound types  final 1/2 2/3  3,2,1
+        showNumber(finalSound, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+        showNumber(halfSound, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+        showNumber(thirdSound, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+        showNumber(threeTwoOneSound, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
+      }
       strip.show();
     }
     if (a >= 35) {
@@ -243,7 +298,7 @@ void setupMode() {
       if (key == '*') {
         pageSetupSelect = 0;
         setupState += 1;
-        if (setupState > 3) {
+        if (setupState > 5) {
           setupState = 1;
         }
       }
@@ -325,6 +380,69 @@ void setupMode() {
           }
         }
       }
+      if (setupState == 4) {      //pitch nothing L/R
+        if (a >= 48 && a <= 57) { /*0-9*/
+          int pressedNumberToAdjust = a - 48;
+          if (pageSetupSelect == 0) {
+            laudness = pressedNumberToAdjust;
+          }
+          if (pageSetupSelect == 1) {
+            if (pressedNumberToAdjust == 0) {
+              L = pressedNumberToAdjust;
+            } else {
+              L = 1;
+            }
+          }
+          if (pageSetupSelect == 2) {
+            if (pressedNumberToAdjust == 0) {
+              R = pressedNumberToAdjust;
+            } else {
+              R = 1;
+            }
+          }
+          pageSetupSelect++;
+          if (pageSetupSelect > 2) {
+            pageSetupSelect = 0;
+          }
+        }
+      }
+      if (setupState == 5) {      //sound types  final 1/2 2/3  3,2,1
+        if (a >= 48 && a <= 57) { /*0-9*/
+          int pressedNumberToAdjust = a - 48;
+          if (pageSetupSelect == 0) {
+            if (pressedNumberToAdjust == 0) {
+              finalSound = pressedNumberToAdjust;
+            } else {
+              finalSound = 1;
+            }
+          }
+          if (pageSetupSelect == 1) {
+            if (pressedNumberToAdjust == 0) {
+              halfSound = pressedNumberToAdjust;
+            } else {
+              halfSound = 1;
+            }
+          }
+          if (pageSetupSelect == 2) {
+            if (pressedNumberToAdjust == 0) {
+              thirdSound = pressedNumberToAdjust;
+            } else {
+              thirdSound = 1;
+            }
+          }
+          if (pageSetupSelect == 3) {
+            if (pressedNumberToAdjust == 0) {
+              threeTwoOneSound = pressedNumberToAdjust;
+            } else {
+              threeTwoOneSound = 1;
+            }
+          }
+          pageSetupSelect++;
+          if (pageSetupSelect > 3) {
+            pageSetupSelect = 0;
+          }
+        }
+      }
     }
     setupTimeOut++;
     Serial.println(setupTimeOut);
@@ -381,27 +499,27 @@ void runtimeMode() {
     detTime = setTime - runningTime;
   }
   setSoundMap(0);
-  if (detTime == 3) {
+  if (detTime == 0 && finalSound == 1) {
+    setSoundMap(1000);
+  } else if (detTime == 1 && threeTwoOneSound == 1) {
+    soundMap[8] = 900;
+  } else if (detTime == 2 && threeTwoOneSound == 1) {
+    soundMap[7] = 800;
+    soundMap[8] = 800;
+  } else if (detTime == 3 && threeTwoOneSound == 1) {
     soundMap[6] = 700;
     soundMap[7] = 700;
     soundMap[8] = 700;
-  } else if (detTime == 2) {
-    soundMap[7] = 800;
-    soundMap[8] = 800;
-  } else if (detTime == 1) {
-    soundMap[8] = 900;
-  } else if (detTime == 0) {
-    setSoundMap(1000);
-  } else if (detTime == setTime / 3) {
+  } else if (detTime == setTime / 2 && halfSound == 1) {
+    soundMap[0] = 300;
+    soundMap[6] = 300;
+    soundMap[8] = 300;
+  } else if (detTime == setTime / 3 && thirdSound == 1) {
     soundMap[0] = 400;
     soundMap[1] = 400;
     soundMap[5] = 400;
     soundMap[6] = 400;
     soundMap[8] = 400;
-  } else if (detTime == setTime / 2) {
-    soundMap[0] = 300;
-    soundMap[6] = 300;
-    soundMap[8] = 300;
   }
   runningTime %= setTime;  //Reset x after 90minutes
   if (runningTime < 0) {
