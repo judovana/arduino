@@ -423,6 +423,14 @@ void setupMode() {
               R = 1;
             }
           }
+          for (int xx = 0; xx < 3; xx++) {
+            freqout(300, 50);
+            delay(50);
+            freqout(500, 50);
+            delay(50);
+            freqout(1000, 50);
+            delay(50);
+          }
           pageSetupSelect++;
           if (pageSetupSelect > 2) {
             pageSetupSelect = 0;
@@ -437,6 +445,11 @@ void setupMode() {
               finalSound = pressedNumberToAdjust;
             } else {
               finalSound = 1;
+              setSoundMap(0);
+              setSoundMapPerTimeToFinal();
+              for (int i = 0; i < 10; i++) {
+                playOrWaitNthTenOfSecond(i);
+              }
             }
           }
           if (pageSetupSelect == 1) {
@@ -444,6 +457,11 @@ void setupMode() {
               halfSound = pressedNumberToAdjust;
             } else {
               halfSound = 1;
+              setSoundMap(0);
+              setSoundMapPerTimeToOnehlaf();
+              for (int i = 0; i < 10; i++) {
+                playOrWaitNthTenOfSecond(i);
+              }
             }
           }
           if (pageSetupSelect == 2) {
@@ -451,6 +469,11 @@ void setupMode() {
               thirdSound = pressedNumberToAdjust;
             } else {
               thirdSound = 1;
+              setSoundMap(0);
+              setSoundMapPerTimeToTwoThirds();
+              for (int i = 0; i < 10; i++) {
+                playOrWaitNthTenOfSecond(i);
+              }
             }
           }
           if (pageSetupSelect == 3) {
@@ -458,6 +481,23 @@ void setupMode() {
               threeTwoOneSound = pressedNumberToAdjust;
             } else {
               threeTwoOneSound = 1;
+              setSoundMap(0);
+              setSoundMapPerTimeToThree();
+              for (int i = 0; i < 10; i++) {
+                playOrWaitNthTenOfSecond(i);
+              }
+              delay(80);
+              setSoundMap(0);
+              setSoundMapPerTimeToTwo();
+              for (int i = 0; i < 10; i++) {
+                playOrWaitNthTenOfSecond(i);
+              }
+              delay(80);
+              setSoundMap(0);
+              setSoundMapPerTimeToOne();
+              for (int i = 0; i < 10; i++) {
+                playOrWaitNthTenOfSecond(i);
+              }
             }
           }
           pageSetupSelect++;
@@ -521,29 +561,7 @@ void runtimeMode() {
   if (mode == 1) {
     detTime = setTime - runningTime;
   }
-  setSoundMap(0);
-  if (detTime == 0 && finalSound == 1) {
-    setSoundMap(1000);
-  } else if (detTime == 1 && threeTwoOneSound == 1) {
-    soundMap[8] = 900;
-  } else if (detTime == 2 && threeTwoOneSound == 1) {
-    soundMap[7] = 800;
-    soundMap[8] = 800;
-  } else if (detTime == 3 && threeTwoOneSound == 1) {
-    soundMap[6] = 700;
-    soundMap[7] = 700;
-    soundMap[8] = 700;
-  } else if (detTime == setTime / 2 && halfSound == 1) {
-    soundMap[0] = 300;
-    soundMap[6] = 300;
-    soundMap[8] = 300;
-  } else if (detTime == setTime / 3 && thirdSound == 1) {
-    soundMap[0] = 400;
-    soundMap[1] = 400;
-    soundMap[5] = 400;
-    soundMap[6] = 400;
-    soundMap[8] = 400;
-  }
+  setSoundMapPerTime(detTime);
   runningTime %= setTime;  //Reset x after 90minutes
   if (runningTime < 0) {
     runningTime = setTime;
@@ -569,16 +587,7 @@ void timeMode(ParsedTime parsed) {
         setupState = 1;
       }
     }
-    int standardDealy = 80;
-    if (i < LED_COUNT_DEL) {
-      if (soundMap[i] == 0) {
-        delay(standardDealy);
-      } else {
-        freqout(soundMap[i], standardDealy);
-      }
-    } else {
-      delay(standardDealy);
-    }
+    playOrWaitNthTenOfSecond(i);
   }
   showTimeWithCorrectDeadline(parsed);
   unsigned long now = millis();
@@ -756,6 +765,51 @@ void setSoundMap(int x) {
   }
 }
 
+void setSoundMapPerTime(int detTime) {
+  setSoundMap(0);
+  if (detTime == 0 && finalSound == 1) {
+    setSoundMapPerTimeToFinal();
+  } else if (detTime == 1 && threeTwoOneSound == 1) {
+    setSoundMapPerTimeToOne();
+  } else if (detTime == 2 && threeTwoOneSound == 1) {
+    setSoundMapPerTimeToTwo();
+  } else if (detTime == 3 && threeTwoOneSound == 1) {
+    setSoundMapPerTimeToThree();
+  } else if (detTime == setTime / 2 && halfSound == 1) {
+    setSoundMapPerTimeToTwoThirds();
+  } else if (detTime == setTime / 3 && thirdSound == 1) {
+    setSoundMapPerTimeToOnehlaf();
+  }
+}
+
+void setSoundMapPerTimeToFinal() {
+  setSoundMap(1000);
+}
+void setSoundMapPerTimeToOne() {
+  soundMap[8] = 900;
+}
+void setSoundMapPerTimeToTwo() {
+  soundMap[7] = 800;
+  soundMap[8] = 800;
+}
+void setSoundMapPerTimeToThree() {
+  soundMap[6] = 700;
+  soundMap[7] = 700;
+  soundMap[8] = 700;
+}
+void setSoundMapPerTimeToTwoThirds() {
+  soundMap[0] = 300;
+  soundMap[6] = 300;
+  soundMap[8] = 300;
+}
+void setSoundMapPerTimeToOnehlaf() {
+  soundMap[0] = 400;
+  soundMap[1] = 400;
+  soundMap[5] = 400;
+  soundMap[6] = 400;
+  soundMap[8] = 400;
+}
+
 void clearLEDs() {
   for (int i = 0; i < LED_COUNT; i++) {
     strip.setPixelColor(i, 0);
@@ -814,4 +868,17 @@ void debugCalc(char title[], ParsedTime orig, int result) {
   debugTime(orig, false);
   Serial.print(" to: ");
   Serial.print(result);
+}
+
+void playOrWaitNthTenOfSecond(int i) {
+  int standardDealy = 80;
+  if (i < LED_COUNT_DEL) {
+    if (soundMap[i] == 0) {
+      delay(standardDealy);
+    } else {
+      freqout(soundMap[i], standardDealy);
+    }
+  } else {
+    delay(standardDealy);
+  }
 }
