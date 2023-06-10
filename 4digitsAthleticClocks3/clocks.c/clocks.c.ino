@@ -24,7 +24,7 @@ void freqoutImpl(bool L, bool R, int freq, int t)  // freq in hz, t in ms
   } else {
     Serial.print("x");
   }
-  if (L) {
+  if (R) {
     Serial.print("R");
   } else {
     Serial.print("x");
@@ -34,7 +34,7 @@ void freqoutImpl(bool L, bool R, int freq, int t)  // freq in hz, t in ms
   Serial.print(" Hz for ");
   Serial.print(t);
   Serial.println(" ms");
-  if (L == R == false) {
+  if (L == R && L == false) {
     delay(t);
     return;
   }
