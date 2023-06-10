@@ -100,7 +100,10 @@ int brightness = 12;
 //if true, then brightnes is loaded from eeprom
 int saveBrightness = 0;  //false
 int mode = -1;
-int setTime = 300;
+int iterations = 0;
+int runningIteration = 0;
+int maxtimes = 1;
+int setTime[4] = { 300, 0, 0, 0 };
 int runningTime = 0;  //seconds
 unsigned long tStart = 0;
 
@@ -120,7 +123,7 @@ void save() {
   saveInt(2, saveBrightness);
   saveInt(4, brightness);
   saveInt(6, mode);
-  saveInt(8, setTime);
+  saveInt(8, setTime[0]);
   saveInt(10, laudness);
   saveInt(12, L);
   saveInt(14, R);
@@ -147,7 +150,7 @@ void load() {
     }
     Serial.println(brightness);
     mode = loadInt(6);
-    setTime = loadInt(8);
+    setTime[0] = loadInt(8);
     laudness = loadInt(10);
     L = loadInt(12);
     if (L != 0) {
@@ -193,7 +196,7 @@ void resetTimes(bool play) {
     freqout(593, 50);
   }
   if (mode < 0) {
-    runningTime = setTime;
+    runningTime = setTime[0];
   } else {
     runningTime = 0;
   }
@@ -256,7 +259,7 @@ void setupMode() {
       del.show();
       clearLEDs();
       if (setupState == 1) {  //time seting
-        ParsedTime current = parseTime(setTime);
+        ParsedTime current = parseTime(setTime[0]);
         showNumber(current.md1, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
         showNumber(current.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
         showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
@@ -328,7 +331,7 @@ void setupMode() {
       //reacting
       if (setupState == 1) {      //time seting
         if (a >= 48 && a <= 57) { /*0-9*/
-          ParsedTime current = parseTime(setTime);
+          ParsedTime current = parseTime(setTime[0]);
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
             current.md1 = pressedNumberToAdjust;
@@ -342,7 +345,7 @@ void setupMode() {
           if (pageSetupSelect == 3) {
             current.sd2 = pressedNumberToAdjust;
           }
-          setTime = calcTime(current);
+          setTime[0] = calcTime(current);
           pageSetupSelect++;
           if (pageSetupSelect > 3) {
             pageSetupSelect = 0;
@@ -559,16 +562,16 @@ void runtimeMode() {
   runningTime += mode;
   int detTime = runningTime;
   if (mode == 1) {
-    detTime = setTime - runningTime;
+    detTime = setTime[0] - runningTime;
   }
   setSoundMapPerTime(detTime);
-  runningTime %= setTime;  //Reset x after 90minutes
+  runningTime %= setTime[0];  //Reset x after 90minutes
   if (runningTime < 0) {
-    runningTime = setTime;
+    runningTime = setTime[0];
   }
   Serial.print(runningTime);
   Serial.print("/");
-  Serial.println(setTime);
+  Serial.println(setTime[0]);
 }
 
 void timeMode(ParsedTime parsed) {
@@ -607,7 +610,7 @@ void timeMode(ParsedTime parsed) {
 }
 
 void showTimeWithCorrectDeadline(ParsedTime parsed) {
-  ParsedTime parsedOriginTime = parseTime(setTime);
+  ParsedTime parsedOriginTime = parseTime(setTime[0]);
   //todo cal the real deadline for the 5959
   clearLEDs();
   showNumberWithDeadline(parsed.md1, 0, parsedOriginTime.md1);
@@ -775,9 +778,9 @@ void setSoundMapPerTime(int detTime) {
     setSoundMapPerTimeToTwo();
   } else if (detTime == 3 && threeTwoOneSound == 1) {
     setSoundMapPerTimeToThree();
-  } else if (detTime == setTime / 2 && halfSound == 1) {
+  } else if (detTime == setTime[0] / 2 && halfSound == 1) {
     setSoundMapPerTimeToTwoThirds();
-  } else if (detTime == setTime / 3 && thirdSound == 1) {
+  } else if (detTime == setTime[0] / 3 && thirdSound == 1) {
     setSoundMapPerTimeToOnehlaf();
   }
 }
@@ -821,7 +824,7 @@ void resetMode() {
     runningTime = 0;
   }
   if (mode < 0) {
-    runningTime = setTime;
+    runningTime = setTime[0];
   }
 }
 
