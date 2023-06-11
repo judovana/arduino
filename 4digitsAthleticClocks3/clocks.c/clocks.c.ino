@@ -104,7 +104,8 @@ int iterations = 0;
 int runningIteration = 0;
 int maxTimes = 0;
 int currentMaxTime = 0;
-int setTime[10] = { 300, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+#define MAX_TIMES 10
+int setTime[MAX_TIMES] = { 300, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 int runningTime = 0;  //seconds
 unsigned long tStart = 0;
 
@@ -134,7 +135,7 @@ void save() {
   saveInt(22, iterations);
   saveInt(24, maxTimes);
   saveInt(26, saveCokie2);
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < MAX_TIMES; i++) {
     saveInt(28 + (i * 2), setTime[i]);
   }
   Serial.println("saved");
@@ -188,7 +189,7 @@ void load() {
     if (maxTimes > 9 || maxTimes < 0) {
       maxTimes = 0;
     }
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < MAX_TIMES; i++) {
       setTime[i] = loadInt(28 + (i * 2));
     }
     Serial.println("loaded values");
@@ -263,7 +264,7 @@ void setupMode() {
     if (setupTimeOut % 5 == 0) {
       Serial.print("menu page: ");
       Serial.print(setupState);
-      Serial.print(" page seelct: ");
+      Serial.print(" page select: ");
       Serial.print(pageSetupSelect);
       Serial.println("");
       deldel(setupState);
@@ -285,6 +286,8 @@ void setupMode() {
       following setupStates will be then also dynamic
       those will;have deldel in MODE 1!
       */
+
+      /*end dynamic maxTimes*/
       if (setupState == 3) {  //brightness
         ParsedTime parsedbr = parseInt(brightness);
         showNumber(saveBrightness, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
@@ -382,12 +385,18 @@ void setupMode() {
             iterations = pressedNumberToAdjust;
             resetMode();
           }
-          //stopwatch/coountdown mode
+          //maxTimes 0-9
           if (pageSetupSelect == 1) {
+            int oldMaxTimes = maxTimes;
             maxTimes = pressedNumberToAdjust;
+            for (int x = oldMaxTimes; x <= maxTimes; x++) {
+              /*if (setTime[x] == 0) */ {
+                setTime[x] = setTime[oldMaxTimes];
+              }
+            }
             resetMode();
           }
-          //maxTimes 0-9
+          //stopwatch/coountdown mode
           if (pageSetupSelect == 2) {
             if (pressedNumberToAdjust % 2 == 1) {
               mode = 1;
