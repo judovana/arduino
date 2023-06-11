@@ -102,15 +102,16 @@ int saveBrightness = 0;  //false
 int mode = -1;
 int iterations = 0;
 int runningIteration = 0;
-int maxtimes = 1;
-int setTime[4] = { 300, 0, 0, 0 };
+int maxTimes = 0;
+int currentMaxTime = 0;
+int setTime[10] = { 300, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 int runningTime = 0;  //seconds
 unsigned long tStart = 0;
 
 int setupState = 0;
 int setupTimeOutMax = 100;
 
-const int saveCokie1 = 2238;
+const int saveCokie1 = 2738;
 const int saveCokie2 = 1236;
 
 #include <EEPROM.h>
@@ -123,15 +124,19 @@ void save() {
   saveInt(2, saveBrightness);
   saveInt(4, brightness);
   saveInt(6, mode);
-  saveInt(8, setTime[0]);
-  saveInt(10, laudness);
-  saveInt(12, L);
-  saveInt(14, R);
-  saveInt(16, finalSound);
-  saveInt(18, halfSound);
-  saveInt(20, thirdSound);
-  saveInt(22, threeTwoOneSound);
-  saveInt(24, saveCokie2);
+  saveInt(8, laudness);
+  saveInt(10, L);
+  saveInt(12, R);
+  saveInt(14, finalSound);
+  saveInt(16, halfSound);
+  saveInt(18, thirdSound);
+  saveInt(20, threeTwoOneSound);
+  saveInt(22, iterations);
+  saveInt(24, maxTimes);
+  saveInt(26, saveCokie2);
+  for (int i = 0; i < 10; i++) {
+    saveInt(28 + (i * 2), setTime[i]);
+  }
   Serial.println("saved");
 }
 int loadInt(int address) {
@@ -139,7 +144,7 @@ int loadInt(int address) {
 }
 void load() {
   int cookie1 = loadInt(0);
-  int cookie2 = loadInt(24);
+  int cookie2 = loadInt(26);
   if (cookie1 == saveCokie1 && cookie2 == saveCokie2) {
     saveBrightness = loadInt(2);
     if (saveBrightness > 0) {
@@ -150,31 +155,41 @@ void load() {
     }
     Serial.println(brightness);
     mode = loadInt(6);
-    setTime[0] = loadInt(8);
-    laudness = loadInt(10);
-    L = loadInt(12);
+    laudness = loadInt(8);
+    L = loadInt(10);
     if (L != 0) {
       L = 1;
     }
-    R = loadInt(14);
+    R = loadInt(12);
     if (R != 0) {
       R = 1;
     }
-    finalSound = loadInt(16);
+    finalSound = loadInt(14);
     if (finalSound != 0) {
       finalSound = 1;
     }
-    halfSound = loadInt(18);
+    halfSound = loadInt(16);
     if (halfSound != 0) {
       halfSound = 1;
     }
-    thirdSound = loadInt(20);
+    thirdSound = loadInt(18);
     if (thirdSound != 0) {
       thirdSound = 1;
     }
-    threeTwoOneSound = loadInt(22);
+    threeTwoOneSound = loadInt(20);
     if (threeTwoOneSound != 0) {
       threeTwoOneSound = 1;
+    }
+    iterations = loadInt(22);
+    if (iterations > 9 || iterations < 0) {
+      iterations = 0;
+    }
+    maxTimes = loadInt(24);
+    if (maxTimes > 9 || maxTimes < 0) {
+      maxTimes = 0;
+    }
+    for (int i = 0; i < 10; i++) {
+      setTime[i] = loadInt(28 + (i * 2));
     }
     Serial.println("loaded values");
   } else {
@@ -195,11 +210,7 @@ void resetTimes(bool play) {
   if (play) {
     freqout(593, 50);
   }
-  if (mode < 0) {
-    runningTime = setTime[0];
-  } else {
-    runningTime = 0;
-  }
+  resetMode();
 }
 
 void pause() {
@@ -256,7 +267,6 @@ void setupMode() {
       Serial.print(pageSetupSelect);
       Serial.println("");
       deldel(setupState);
-      del.show();
       clearLEDs();
       if (setupState == 1) {  //time seting
         ParsedTime current = parseTime(setTime[0]);
@@ -265,9 +275,16 @@ void setupMode() {
         showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
         showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
-      if (setupState == 2) {  //stopwatch/countdown
-        showNumber(mode, 3, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+      if (setupState == 2) {  //iteratins, times, nic, stopwatch/countdown
+        showNumber(iterations, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+        showNumber(maxTimes, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+        showNumber(mode, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
       }
+      /*
+      Dynamically set maxTimes
+      following setupStates will be then also dynamic
+      those will;have deldel in MODE 1!
+      */
       if (setupState == 3) {  //brightness
         ParsedTime parsedbr = parseInt(brightness);
         showNumber(saveBrightness, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
@@ -288,6 +305,7 @@ void setupMode() {
         showNumber(threeTwoOneSound, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
       strip.show();
+      del.show();
     }
     if (a >= 35) {
       Serial.print("Pressed: ");
@@ -308,7 +326,7 @@ void setupMode() {
       if (key == 'A') {
         pageSetupSelect = 0;
       }
-      if (key == 'B' && (setupState == 1 || setupState == 3 || setupState == 5)) {
+      if (key == 'B' && (setupState == 1 || setupState == 2 || setupState == 3 || setupState == 5)) {
         pageSetupSelect = 1;
       }
       if (key == 'B' && (setupState == 4)) {
@@ -320,10 +338,13 @@ void setupMode() {
       if (key == 'C' && (setupState == 4)) {
         pageSetupSelect = 1;
       }
+      if (key == 'C' && (setupState == 2)) {
+        //empty
+      }
       if (key == 'D' && (setupState == 1 || setupState == 3 || setupState == 5)) {
         pageSetupSelect = 3;
       }
-      if (key == 'D' && (setupState == 4)) {
+      if (key == 'D' && (setupState == 2 || setupState == 4)) {
         pageSetupSelect = 2;
       }
 
@@ -353,16 +374,31 @@ void setupMode() {
           resetMode();
         }
       }
-      if (setupState == 2) {      //stopwatch/coountdown mode
+      if (setupState == 2) {      //iterations, maxTimes, nothing, stopwatch/coountdown mode
         if (a >= 48 && a <= 57) { /*0-9*/
           int pressedNumberToAdjust = a - 48;
+          //iterations 0-9
           if (pageSetupSelect == 0) {
+            iterations = pressedNumberToAdjust;
+            resetMode();
+          }
+          //stopwatch/coountdown mode
+          if (pageSetupSelect == 1) {
+            maxTimes = pressedNumberToAdjust;
+            resetMode();
+          }
+          //maxTimes 0-9
+          if (pageSetupSelect == 2) {
             if (pressedNumberToAdjust % 2 == 1) {
               mode = 1;
             } else {
               mode = -1;
             }
             resetMode();
+          }
+          pageSetupSelect++;
+          if (pageSetupSelect > 2) {
+            pageSetupSelect = 0;
           }
         }
       }
@@ -562,16 +598,16 @@ void runtimeMode() {
   runningTime += mode;
   int detTime = runningTime;
   if (mode == 1) {
-    detTime = setTime[0] - runningTime;
+    detTime = setTime[currentMaxTime] - runningTime;
   }
   setSoundMapPerTime(detTime);
-  runningTime %= setTime[0];  //Reset x after 90minutes
+  runningTime %= setTime[currentMaxTime];  //Reset x after 90minutes
   if (runningTime < 0) {
-    runningTime = setTime[0];
+    runningTime = setTime[currentMaxTime];
   }
   Serial.print(runningTime);
   Serial.print("/");
-  Serial.println(setTime[0]);
+  Serial.println(setTime[currentMaxTime]);
 }
 
 void timeMode(ParsedTime parsed) {
@@ -610,7 +646,7 @@ void timeMode(ParsedTime parsed) {
 }
 
 void showTimeWithCorrectDeadline(ParsedTime parsed) {
-  ParsedTime parsedOriginTime = parseTime(setTime[0]);
+  ParsedTime parsedOriginTime = parseTime(setTime[currentMaxTime]);
   //todo cal the real deadline for the 5959
   clearLEDs();
   showNumberWithDeadline(parsed.md1, 0, parsedOriginTime.md1);
@@ -736,6 +772,10 @@ void showSequence(int from, int to, int r, int g, int b) {
 }
 
 void deldel(int xtime) {
+  deldel(xtime, 0);
+}
+
+void deldel(int xtime, int mode) {
   clearDelDel();
   int x = xtime % 10;
   if (x == 9) {
@@ -744,13 +784,24 @@ void deldel(int xtime) {
       //Serial.print("-");
     }
   } else {
-    for (int i = 0; i < xtime; i++) {
-      del.setPixelColor(i, brightness, 0, brightness);
-      //Serial.print("o");
-    }
-    for (int i = xtime; i < LED_COUNT_DEL - 1; i++) {
-      del.setPixelColor(i, 0, brightness, brightness);
-      //Serial.print("x");
+    if (mode == 0) {
+      for (int i = 0; i < xtime; i++) {
+        del.setPixelColor(i, brightness, 0, brightness);
+        //Serial.print(mode);
+      }
+      for (int i = xtime; i < LED_COUNT_DEL - 1; i++) {
+        del.setPixelColor(i, 0, brightness, brightness);
+        //Serial.print("x");
+      }
+    } else {
+      for (int i = 0; i < xtime; i++) {
+        del.setPixelColor(i, brightness, 0, 0);
+        //Serial.print(mode);
+      }
+      for (int i = xtime; i < LED_COUNT_DEL - 1; i++) {
+        del.setPixelColor(i, 0, 0, brightness);
+        //Serial.print("x");
+      }
     }
   }
   //Serial.println("");
@@ -778,9 +829,9 @@ void setSoundMapPerTime(int detTime) {
     setSoundMapPerTimeToTwo();
   } else if (detTime == 3 && threeTwoOneSound == 1) {
     setSoundMapPerTimeToThree();
-  } else if (detTime == setTime[0] / 2 && halfSound == 1) {
+  } else if (detTime == setTime[currentMaxTime] / 2 && halfSound == 1) {
     setSoundMapPerTimeToTwoThirds();
-  } else if (detTime == setTime[0] / 3 && thirdSound == 1) {
+  } else if (detTime == setTime[currentMaxTime] / 3 && thirdSound == 1) {
     setSoundMapPerTimeToOnehlaf();
   }
 }
@@ -820,11 +871,13 @@ void clearLEDs() {
 }
 
 void resetMode() {
+  runningIteration = iterations;
+  currentMaxTime = 0;
   if (mode > 0) {
     runningTime = 0;
   }
   if (mode < 0) {
-    runningTime = setTime[0];
+    runningTime = setTime[currentMaxTime];
   }
 }
 

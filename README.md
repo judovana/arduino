@@ -32,7 +32,11 @@ Demo for keybard + speaker
    * red is the digit you are modifying now, green reflects current setup
    * if yo **do not edit** it, the **time will persist** as it was, otherwise it will reset
  * '*'will move you to next settings page.
+   * iterations - 0-9 where 0 is endless. So you can setup limited amount of iterations. The ending sound can not be turned off.
+   * timers - 0-9. You can set aditional different timers to run in row. Eg 3:00 train, 2:00 rest. That is timers-1 (as 0 is default, which is here always)
+     * That also mean, you can override maximum of 9 iterations - id you set this to 9, and each time to same, you will have 90 iterations:)
    * +1 for stop-watch (any odd number), -1 for countdown (any pair number)
+     * if yo **do not edit** those three, the **time will persist** as it was, otherwise it will reset
  * '*'will move you to next settings page - brightness
     * as time, you can edit brightness of LEDs
     * it is 0-250
