@@ -109,7 +109,8 @@ int setTime[MAX_TIMES] = { 300, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 int runningTime = 0;  //seconds
 unsigned long tStart = 0;
 
-int setupState = 0;
+#define MAX_SUBSETUPS 1000
+int setupStateGlobal = 0;
 int setupTimeOutMax = 100;
 
 const int saveCokie1 = 2738;
@@ -243,7 +244,7 @@ void setup() {
     tStart = millis();
     Serial.print("Start: ");
     Serial.println(tStart);
-    if (setupState == 0) {
+    if (setupStateGlobal == 0) {
       runtimeMode();
     } else {
       setupMode();
@@ -258,25 +259,32 @@ void setupMode() {
   int setupTimeOut = 0;
   int pageSetupSelect = 0;
   while (1) {
+    int setupStateLocal = setupStateGlobal / MAX_SUBSETUPS;  //holding real page 1(000) 2(0005) ...
+    int dynamicSubsetup = setupStateGlobal % MAX_SUBSETUPS;  //holding subpage  0         5 ....
     char key = keypad_1.getKey();
     int a = (int)key;
     ////pritning, only twice per second, otherwise it will go mad
     if (setupTimeOut % 5 == 0) {
       Serial.print("menu page: ");
-      Serial.print(setupState);
+      Serial.print(setupStateGlobal);
+      Serial.print("(");
+      Serial.print(setupStateLocal);
+      Serial.print("/");
+      Serial.print(dynamicSubsetup);
+      Serial.print(")");
       Serial.print(" page select: ");
       Serial.print(pageSetupSelect);
       Serial.println("");
-      deldel(setupState);
+      deldel(setupStateLocal, 0);
       clearLEDs();
-      if (setupState == 1) {  //time seting
+      if (setupStateLocal == 1) {  //time seting
         ParsedTime current = parseTime(setTime[0]);
         showNumber(current.md1, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
         showNumber(current.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
         showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
         showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
-      if (setupState == 2) {  //iteratins, times, nic, stopwatch/countdown
+      if (setupStateLocal == 2) {  //iteratins, times, nic, stopwatch/countdown
         showNumber(iterations, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
         showNumber(maxTimes, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
         showNumber(mode, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
@@ -286,22 +294,24 @@ void setupMode() {
       following setupStates will be then also dynamic
       those will;have deldel in MODE 1!
       */
-
+      if (dynamicSubsetup != 0) {
+        deldel(dynamicSubsetup, 1);
+      }
       /*end dynamic maxTimes*/
-      if (setupState == 3) {  //brightness
+      if (setupStateLocal == 3) {  //brightness
         ParsedTime parsedbr = parseInt(brightness);
         showNumber(saveBrightness, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
         showNumber(parsedbr.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
         showNumber(parsedbr.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
         showNumber(parsedbr.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
-      if (setupState == 4) {  //pitch nothing L/R
+      if (setupStateLocal == 4) {  //pitch nothing L/R
         ParsedTime parsedbr = parseInt(brightness);
         showNumber(laudness, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
         showNumber(L, 2, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
         showNumber(R, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
       }
-      if (setupState == 5) {  //sound types  final 1/2 2/3  3,2,1
+      if (setupStateLocal == 5) {  //sound types  final 1/2 2/3  3,2,1
         showNumber(finalSound, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
         showNumber(halfSound, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
         showNumber(thirdSound, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
@@ -315,46 +325,47 @@ void setupMode() {
       Serial.println(key);
       setupTimeOut = -1;
       if (key == '#') {
-        setupState = 0;
+        setupStateGlobal = 0;
         save();
         break;
       }
       if (key == '*') {
         pageSetupSelect = 0;
-        setupState += 1;
-        if (setupState > 5) {
-          setupState = 1;
+        setupStateGlobal += MAX_SUBSETUPS;
+        if (setupStateGlobal > 5 * MAX_SUBSETUPS) {
+          setupStateGlobal = 1 * MAX_SUBSETUPS;
         }
+        continue;
       }
       if (key == 'A') {
         pageSetupSelect = 0;
       }
-      if (key == 'B' && (setupState == 1 || setupState == 2 || setupState == 3 || setupState == 5)) {
+      if (key == 'B' && (setupStateLocal == 1 || setupStateLocal == 2 || setupStateLocal == 3 || setupStateLocal == 5)) {
         pageSetupSelect = 1;
       }
-      if (key == 'B' && (setupState == 4)) {
+      if (key == 'B' && (setupStateLocal == 4)) {
         //empty
       }
-      if (key == 'C' && (setupState == 1 || setupState == 3 || setupState == 5)) {
+      if (key == 'C' && (setupStateLocal == 1 || setupStateLocal == 3 || setupStateLocal == 5)) {
         pageSetupSelect = 2;
       }
-      if (key == 'C' && (setupState == 4)) {
+      if (key == 'C' && (setupStateLocal == 4)) {
         pageSetupSelect = 1;
       }
-      if (key == 'C' && (setupState == 2)) {
+      if (key == 'C' && (setupStateLocal == 2)) {
         //empty
       }
-      if (key == 'D' && (setupState == 1 || setupState == 3 || setupState == 5)) {
+      if (key == 'D' && (setupStateLocal == 1 || setupStateLocal == 3 || setupStateLocal == 5)) {
         pageSetupSelect = 3;
       }
-      if (key == 'D' && (setupState == 2 || setupState == 4)) {
+      if (key == 'D' && (setupStateLocal == 2 || setupStateLocal == 4)) {
         pageSetupSelect = 2;
       }
 
 
       //reacting
-      if (setupState == 1) {      //time seting
-        if (a >= 48 && a <= 57) { /*0-9*/
+      if (setupStateLocal == 1) {  //time seting
+        if (a >= 48 && a <= 57) {  /*0-9*/
           ParsedTime current = parseTime(setTime[0]);
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
@@ -377,8 +388,8 @@ void setupMode() {
           resetMode();
         }
       }
-      if (setupState == 2) {      //iterations, maxTimes, nothing, stopwatch/coountdown mode
-        if (a >= 48 && a <= 57) { /*0-9*/
+      if (setupStateLocal == 2) {  //iterations, maxTimes, nothing, stopwatch/coountdown mode
+        if (a >= 48 && a <= 57) {  /*0-9*/
           int pressedNumberToAdjust = a - 48;
           //iterations 0-9
           if (pageSetupSelect == 0) {
@@ -411,8 +422,8 @@ void setupMode() {
           }
         }
       }
-      if (setupState == 3) {      //brightness
-        if (a >= 48 && a <= 57) { /*0-9*/
+      if (setupStateLocal == 3) {  //brightness
+        if (a >= 48 && a <= 57) {  /*0-9*/
           ParsedTime parsedbr = parseInt(brightness);
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
@@ -451,8 +462,8 @@ void setupMode() {
           }
         }
       }
-      if (setupState == 4) {      //pitch nothing L/R
-        if (a >= 48 && a <= 57) { /*0-9*/
+      if (setupStateLocal == 4) {  //pitch nothing L/R
+        if (a >= 48 && a <= 57) {  /*0-9*/
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
             laudness = pressedNumberToAdjust;
@@ -485,8 +496,8 @@ void setupMode() {
           }
         }
       }
-      if (setupState == 5) {      //sound types  final 1/2 2/3  3,2,1
-        if (a >= 48 && a <= 57) { /*0-9*/
+      if (setupStateLocal == 5) {  //sound types  final 1/2 2/3  3,2,1
+        if (a >= 48 && a <= 57) {  /*0-9*/
           int pressedNumberToAdjust = a - 48;
           if (pageSetupSelect == 0) {
             if (pressedNumberToAdjust == 0) {
@@ -558,7 +569,7 @@ void setupMode() {
     setupTimeOut++;
     Serial.println(setupTimeOut);
     if (setupTimeOut > setupTimeOutMax) {
-      setupState = 0;
+      setupStateGlobal = 0;
       save();
       break;
     }
@@ -632,7 +643,7 @@ void timeMode(ParsedTime parsed) {
         pause();
       }
       if (key == '*') {
-        setupState = 1;
+        setupStateGlobal = MAX_SUBSETUPS;
       }
     }
     playOrWaitNthTenOfSecond(i);
