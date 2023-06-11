@@ -284,20 +284,22 @@ void setupMode() {
         showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
         showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
       }
-      if (setupStateLocal == 2) {  //iteratins, times, nic, stopwatch/countdown
-        showNumber(iterations, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
-        showNumber(maxTimes, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
-        showNumber(mode, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+      if (setupStateLocal == 2) {
+        if (dynamicSubsetup == 0) {  //iteratins, times, nic, stopwatch/countdown
+          showNumber(iterations, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+          showNumber(maxTimes, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+          showNumber(mode, 3, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+        } else {
+          /*Dynamically set maxTimes; those will;have deldel in MODE 1!*/
+          deldel(dynamicSubsetup, 1);
+          ParsedTime current = parseTime(setTime[dynamicSubsetup]);
+          showNumber(current.md1, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
+          showNumber(current.md2, 1, pageSetupSelect == 1 ? brightness : 0, pageSetupSelect != 1 ? brightness : 0, 0);
+          showNumber(current.sd1, 2, pageSetupSelect == 2 ? brightness : 0, pageSetupSelect != 2 ? brightness : 0, 0);
+          showNumber(current.sd2, 3, pageSetupSelect == 3 ? brightness : 0, pageSetupSelect != 3 ? brightness : 0, 0);
+          /*end dynamic maxTimes*/
+        }
       }
-      /*
-      Dynamically set maxTimes
-      following setupStates will be then also dynamic
-      those will;have deldel in MODE 1!
-      */
-      if (dynamicSubsetup != 0) {
-        deldel(dynamicSubsetup, 1);
-      }
-      /*end dynamic maxTimes*/
       if (setupStateLocal == 3) {  //brightness
         ParsedTime parsedbr = parseInt(brightness);
         showNumber(saveBrightness, 0, pageSetupSelect == 0 ? brightness : 0, pageSetupSelect != 0 ? brightness : 0, 0);
@@ -322,7 +324,9 @@ void setupMode() {
     }
     if (a >= 35) {
       Serial.print("Pressed: ");
-      Serial.println(key);
+      Serial.print(key);
+      Serial.print("/");
+      Serial.println(a);
       setupTimeOut = -1;
       if (key == '#') {
         setupStateGlobal = 0;
@@ -331,38 +335,50 @@ void setupMode() {
       }
       if (key == '*') {
         pageSetupSelect = 0;
-        setupStateGlobal += MAX_SUBSETUPS;
+        if (setupStateLocal == 2) {
+          setupStateGlobal++;
+          if (setupStateGlobal - 2000 > maxTimes) {
+            setupStateGlobal = 3000;
+          }
+        } else {
+          setupStateGlobal += MAX_SUBSETUPS;
+        }
         if (setupStateGlobal > 5 * MAX_SUBSETUPS) {
           setupStateGlobal = 1 * MAX_SUBSETUPS;
         }
         continue;
       }
-      if (key == 'A') {
-        pageSetupSelect = 0;
+      if (setupStateLocal == 2 && dynamicSubsetup != 0) {
+        //a==65..D==68
+        if (a > 64 && a < 69) {
+          pageSetupSelect = a - 65;
+        }
+      } else {
+        if (key == 'A') {
+          pageSetupSelect = 0;
+        }
+        if (key == 'B' && (setupStateLocal == 1 || setupStateLocal == 2 || setupStateLocal == 3 || setupStateLocal == 5)) {
+          pageSetupSelect = 1;
+        }
+        if (key == 'B' && (setupStateLocal == 4)) {
+          //empty
+        }
+        if (key == 'C' && (setupStateLocal == 1 || setupStateLocal == 3 || setupStateLocal == 5)) {
+          pageSetupSelect = 2;
+        }
+        if (key == 'C' && (setupStateLocal == 4)) {
+          pageSetupSelect = 1;
+        }
+        if (key == 'C' && (setupStateLocal == 2)) {
+          //empty
+        }
+        if (key == 'D' && (setupStateLocal == 1 || setupStateLocal == 3 || setupStateLocal == 5)) {
+          pageSetupSelect = 3;
+        }
+        if (key == 'D' && (setupStateLocal == 2 || setupStateLocal == 4)) {
+          pageSetupSelect = 2;
+        }
       }
-      if (key == 'B' && (setupStateLocal == 1 || setupStateLocal == 2 || setupStateLocal == 3 || setupStateLocal == 5)) {
-        pageSetupSelect = 1;
-      }
-      if (key == 'B' && (setupStateLocal == 4)) {
-        //empty
-      }
-      if (key == 'C' && (setupStateLocal == 1 || setupStateLocal == 3 || setupStateLocal == 5)) {
-        pageSetupSelect = 2;
-      }
-      if (key == 'C' && (setupStateLocal == 4)) {
-        pageSetupSelect = 1;
-      }
-      if (key == 'C' && (setupStateLocal == 2)) {
-        //empty
-      }
-      if (key == 'D' && (setupStateLocal == 1 || setupStateLocal == 3 || setupStateLocal == 5)) {
-        pageSetupSelect = 3;
-      }
-      if (key == 'D' && (setupStateLocal == 2 || setupStateLocal == 4)) {
-        pageSetupSelect = 2;
-      }
-
-
       //reacting
       if (setupStateLocal == 1) {  //time seting
         if (a >= 48 && a <= 57) {  /*0-9*/
@@ -388,8 +404,8 @@ void setupMode() {
           resetMode();
         }
       }
-      if (setupStateLocal == 2) {  //iterations, maxTimes, nothing, stopwatch/coountdown mode
-        if (a >= 48 && a <= 57) {  /*0-9*/
+      if (setupStateLocal == 2 && dynamicSubsetup == 0) {  //iterations, maxTimes, nothing, stopwatch/coountdown mode
+        if (a >= 48 && a <= 57) {                          /*0-9*/
           int pressedNumberToAdjust = a - 48;
           //iterations 0-9
           if (pageSetupSelect == 0) {
@@ -420,6 +436,30 @@ void setupMode() {
           if (pageSetupSelect > 2) {
             pageSetupSelect = 0;
           }
+        }
+      }
+      if (setupStateLocal == 2 && dynamicSubsetup != 0) {  //subtimes
+        if (a >= 48 && a <= 57) {                          /*0-9*/
+          ParsedTime current = parseTime(setTime[dynamicSubsetup]);
+          int pressedNumberToAdjust = a - 48;
+          if (pageSetupSelect == 0) {
+            current.md1 = pressedNumberToAdjust;
+          }
+          if (pageSetupSelect == 1) {
+            current.md2 = pressedNumberToAdjust;
+          }
+          if (pageSetupSelect == 2) {
+            current.sd1 = pressedNumberToAdjust;
+          }
+          if (pageSetupSelect == 3) {
+            current.sd2 = pressedNumberToAdjust;
+          }
+          setTime[dynamicSubsetup] = calcTime(current);
+          pageSetupSelect++;
+          if (pageSetupSelect > 3) {
+            pageSetupSelect = 0;
+          }
+          resetMode();
         }
       }
       if (setupStateLocal == 3) {  //brightness
@@ -621,9 +661,22 @@ void runtimeMode() {
     detTime = setTime[currentMaxTime] - runningTime;
   }
   setSoundMapPerTime(detTime);
-  runningTime %= setTime[currentMaxTime];  //Reset x after 90minutes
-  if (runningTime < 0) {
-    runningTime = setTime[currentMaxTime];
+  if (mode == 1) {
+    if (runningTime == setTime[currentMaxTime]) {
+      currentMaxTime++;
+      if (currentMaxTime > maxTimes) {
+        currentMaxTime = 0;
+      }
+      runningTime = 0;
+    }
+  } else {
+    if (runningTime < 0) {
+      currentMaxTime++;
+      if (currentMaxTime > maxTimes) {
+        currentMaxTime = 0;
+      }
+      runningTime = setTime[currentMaxTime];
+    }
   }
   Serial.print(runningTime);
   Serial.print("/");

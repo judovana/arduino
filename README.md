@@ -37,6 +37,9 @@ Demo for keybard + speaker
      * That also mean, you can override maximum of 9 iterations - id you set this to 9, and each time to same, you will have 90 iterations:)
    * +1 for stop-watch (any odd number), -1 for countdown (any pair number)
      * if yo **do not edit** those three, the **time will persist** as it was, otherwise it will reset
+     * If you have set more then 0 of additional timers, then you will now jump to submenu, where you will set up individual subtimers
+       * you set them up as initial timer (the first one before you entered menu)
+       * the counter - which subtimer you are setting up - is now shown in red color in the delimiter strip
  * '*'will move you to next settings page - brightness
     * as time, you can edit brightness of LEDs
     * it is 0-250
