@@ -58,6 +58,5 @@ Demo for keybard + speaker
   * 1/2 sound
   * 2/3 sound
   * 3,2,1 sounds
- *  (todo, iterations, multiple times and so on...)
  *  another '*' will move you to beggining of setup - time
  *  once setup ends, it is saved for next launch (including brigntess!)
