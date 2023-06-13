@@ -245,7 +245,18 @@ void setup() {
     Serial.print("Start: ");
     Serial.println(tStart);
     if (setupStateGlobal == 0) {
-      runtimeMode();
+      bool wasIterationReset = runtimeMode();
+      if (iterations != 0 && wasIterationReset) {
+        if (runningIteration == 0) {
+          freqout(1000, 50);
+          freqout(800, 50);
+          freqout(600, 50);
+          freqout(400, 50);
+          freqout(1200, 100);
+          pause();
+          resetMode();
+        }
+      }
     } else {
       setupMode();
     }
@@ -651,7 +662,7 @@ struct ParsedTime parseInt(int digit) {
   return parsed;
 }
 
-void runtimeMode() {
+bool runtimeMode() {
   ParsedTime parsed = parseTime(runningTime);
   debugTime(parsed);
   timeMode(parsed);
@@ -661,6 +672,7 @@ void runtimeMode() {
     detTime = setTime[currentMaxTime] - runningTime;
   }
   setSoundMapPerTime(detTime);
+  bool itreset = false;
   if (mode == 1) {
     if (runningTime == setTime[currentMaxTime]) {
       currentMaxTime++;
@@ -668,6 +680,7 @@ void runtimeMode() {
         currentMaxTime = 0;
       }
       runningTime = 0;
+      itreset = (currentMaxTime == 0);
     }
   } else {
     if (runningTime < 0) {
@@ -676,11 +689,43 @@ void runtimeMode() {
         currentMaxTime = 0;
       }
       runningTime = setTime[currentMaxTime];
+      itreset = (currentMaxTime == 0);
+      ;
     }
   }
+  if (itreset) {
+    if (iterations != 0) {
+      runningIteration--;
+      clearLEDs();
+      int r = 0;
+      int g = brightness;
+      int b = 0;
+      if (runningIteration <= iterations / 2) {
+        r = 0;
+        g = 0;
+        b = brightness;
+      }
+      if (runningIteration <= iterations / 4) {
+        r = brightness;
+        g = 0;
+        b = 0;
+      }
+      showNumber(runningIteration, 0, r, g, b);
+      showNumber(iterations, 3, brightness, brightness, brightness);
+      strip.show();
+      freqout(400, 450);
+      freqout(600, 250);
+      freqout(800, 250);
+    }
+  }
+  Serial.print(runningIteration);
+  Serial.print("/");
+  Serial.print(iterations);
+  Serial.print("x  ");
   Serial.print(runningTime);
   Serial.print("/");
   Serial.println(setTime[currentMaxTime]);
+  return itreset;
 }
 
 void timeMode(ParsedTime parsed) {
