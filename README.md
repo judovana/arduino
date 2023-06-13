@@ -9,6 +9,9 @@ based on:
 
 ## 4digitsAthleticClocks2/clocks.c
 Reworked clocks, so insteda of big digits, the WS2812 strips are used to create the numbers
+![IMG_20230613_153719](https://github.com/judovana/arduino/assets/2904395/f5ddc7f7-9222-4057-90e2-a7357116640d)
+![IMG_20230613_153558](https://github.com/judovana/arduino/assets/2904395/faab41dc-6596-4d06-8f9c-46e733e76fc9)
+
 
 ## FreeBoard/WS2812blinks
 Controller for https://github.com/judovana/FlashFreeBoardDesktop
