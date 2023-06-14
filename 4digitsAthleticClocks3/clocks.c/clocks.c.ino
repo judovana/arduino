@@ -237,9 +237,16 @@ void setup() {
   Serial.begin(9600);
   load();
   del.begin();
+  clearDelDel();
   del.show();
   strip.begin();
+  clearLEDs();
+  showNumber(iterations, 0, brightness, brightness, brightness);
+  showNumber(1 /*like I*/, 1, brightness, 0, 0);
+  showNumber(maxTimes, 3, brightness, brightness, brightness);
+  showNumber(-65 /*like -A*/, 1, brightness, 0, 0);
   strip.show();
+  delay(1000);
   while (1) {
     tStart = millis();
     Serial.print("Start: ");
@@ -847,25 +854,28 @@ void showNumber(int value, int display, int r, int g, int b) {
   if (value == -1) {
     number = -1;
   }
-  if (number == 0 || number == 2 || number == 6 || number == 8) {
+  if (value == -65) {
+    number = -65;
+  }
+  if (number == 0 || number == 2 || number == 6 || number == 8 || number == -65) {
     segmentN(display, 0, r, g, b);
   }
   if (number == 0 || number == 2 || number == 3 || number == 5 || number == 6 || number == 8) {
     segmentN(display, 1, r, g, b);
   }
-  if (number == 0 || number == 1 || number == 3 || number == 4 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9 || number == -1) {
+  if (number == 0 || number == 1 || number == 3 || number == 4 || number == 5 || number == 6 || number == 7 || number == 8 || number == 9 || number == -1 || number == -65) {
     segmentN(display, 2, r, g, b);
   }
-  if (number == 0 || number == 1 || number == 2 || number == 3 || number == 4 || number == 7 || number == 8 || number == 9 || number == -1) {
+  if (number == 0 || number == 1 || number == 2 || number == 3 || number == 4 || number == 7 || number == 8 || number == 9 || number == -1 || number == -65) {
     segmentN(display, 3, r, g, b);
   }
-  if (number == 0 || number == 2 || number == 3 || number == 5 || number == 7 || number == 8 || number == 9) {
+  if (number == 0 || number == 2 || number == 3 || number == 5 || number == 7 || number == 8 || number == 9 || number == -65) {
     segmentN(display, 4, r, g, b);
   }
-  if (number == 0 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9) {
+  if (number == 0 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9 || number == -65) {
     segmentN(display, 5, r, g, b);
   }
-  if (number == 2 || number == 3 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9 || number == -1) {
+  if (number == 2 || number == 3 || number == 4 || number == 5 || number == 6 || number == 8 || number == 9 || number == -1 || number == -65) {
     segmentN(display, 6, r, g, b);
   }
 }

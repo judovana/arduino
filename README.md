@@ -23,6 +23,7 @@ It just programmed one led, to be glued to battery, and then light for ever in t
 Demo for keybard + speaker
 
 ## v3 are fully controllable gym clocks
+ * after start, loaded *I*terations and *A*dditional timers are shown for a second
  * 'A' pause. Unpause by any key. Except 'D'
    * while in pause, 'D' will reset the time
  * '*' will enter the menu. The time is stopped now.
