@@ -243,10 +243,10 @@ void setup() {
   clearLEDs();
   showNumber(iterations, 0, brightness, brightness, brightness);
   showNumber(1 /*like I*/, 1, brightness, 0, 0);
-  showNumber(maxTimes, 3, brightness, brightness, brightness);
-  showNumber(-65 /*like -A*/, 1, brightness, 0, 0);
+  showNumber(maxTimes, 2, brightness, brightness, brightness);
+  showNumber(-65 /*like -A*/, 3, brightness, 0, 0);
   strip.show();
-  delay(1000);
+  delay(2000);
   while (1) {
     tStart = millis();
     Serial.print("Start: ");
